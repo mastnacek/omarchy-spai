@@ -17,11 +17,11 @@ Item {
   property bool opened: false
   property string viewMode: "kanban" // "kanban", "capture", "notes", "ideas"
   property string filterText: ""
-  property int activeColumnIndex: 0  // 0: todo, 1: working, 2: waiting, 3: done
+  property int activeColumnIndex: 0  // 0: todo, 1: working, 2: waiting, 3: done, 4: cancelled
   property int selectedCardIndex: 0
 
   property var allItems: []
-  property var stats: ({ total: 0, todo: 0, working: 0, waiting: 0, done: 0, notes: 0, ideas: 0, pendingTotal: 0 })
+  property var stats: ({ total: 0, todo: 0, working: 0, waiting: 0, done: 0, cancelled: 0, notes: 0, ideas: 0, pendingTotal: 0 })
 
   // Surface tokens
   property color background: Color.menu.background
@@ -38,7 +38,7 @@ Item {
 
   property int modalWidth: Math.min(Style.space(1280), panel.width - Style.gapsOut * 2)
   property int modalHeight: Math.min(Style.space(740), panel.height - Style.gapsOut * 2)
-  property int captureWidth: Math.min(Style.space(660), panel.width - Style.gapsOut * 2)
+  property int captureWidth: Math.min(Style.space(680), panel.width - Style.gapsOut * 2)
   property alias captureInputText: captureInput.text
 
   function open(payloadJson) {
@@ -112,9 +112,48 @@ Item {
     root.saveData()
   }
 
+  function updateStatusAndFollow(id, targetStatus) {
+    root.allItems = SpaiModel.moveStatus(root.allItems, id, targetStatus)
+    root.saveData()
+
+    var statuses = ["todo", "working", "waiting", "done", "cancelled"]
+    var targetColIdx = statuses.indexOf(targetStatus)
+    if (targetColIdx !== -1) {
+      root.activeColumnIndex = targetColIdx
+      var targetTasks = root.getFilteredList("Todo", targetStatus)
+      var newIdx = 0
+      for (var i = 0; i < targetTasks.length; i++) {
+        if (targetTasks[i].id === id) {
+          newIdx = i
+          break
+        }
+      }
+      root.selectedCardIndex = newIdx
+    }
+  }
+
   function cycleItemStatus(id, direction) {
     root.allItems = SpaiModel.cycleStatus(root.allItems, id, direction)
     root.saveData()
+  }
+
+  function cycleItemStatusAndFollow(id, direction) {
+    var cur = null
+    for (var i = 0; i < root.allItems.length; i++) {
+      if (root.allItems[i].id === id) {
+        cur = root.allItems[i]
+        break
+      }
+    }
+    if (!cur) return
+
+    var statuses = ["todo", "working", "waiting", "done", "cancelled"]
+    var idx = statuses.indexOf(cur.status)
+    if (idx === -1) idx = 0
+    var nextIdx = (idx + direction + statuses.length) % statuses.length
+    var nextStatus = statuses[nextIdx]
+
+    root.updateStatusAndFollow(id, nextStatus)
   }
 
   function deleteItem(id) {
@@ -216,13 +255,15 @@ Item {
       color: root.background
       borderSpec: root.borderSpec
 
+      readonly property var detected: SpaiModel.parseRawItem(captureInput.text)
+
       MouseArea { anchors.fill: parent; onClicked: {} }
 
       Column {
         id: captureCol
         anchors.fill: parent
         anchors.margins: Style.space(18)
-        spacing: Style.space(14)
+        spacing: Style.space(12)
 
         // Header
         Row {
@@ -362,6 +403,151 @@ Item {
           }
         }
 
+        // Live Syntax Detection Preview Bar
+        Rectangle {
+          width: parent.width
+          height: Style.space(32)
+          radius: Style.space(6)
+          color: Util.alpha(Color.menu.background, 0.9)
+          border.color: Util.alpha(Color.menu.border, 0.2)
+          border.width: 1
+          visible: Boolean(captureModal.detected)
+
+          Row {
+            anchors.fill: parent
+            anchors.leftMargin: Style.space(8)
+            anchors.rightMargin: Style.space(8)
+            spacing: Style.space(8)
+
+            Text {
+              text: "Detected:"
+              color: Color.muted
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              anchors.verticalCenter: parent.verticalCenter
+            }
+
+            // Type Badge
+            Rectangle {
+              height: Style.space(20)
+              width: detTypeText.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              anchors.verticalCenter: parent.verticalCenter
+              color: {
+                if (!captureModal.detected) return "transparent"
+                var st = captureModal.detected.status
+                if (st === "todo") return Util.alpha("#38bdf8", 0.2)
+                if (st === "working") return Util.alpha("#f59e0b", 0.2)
+                if (st === "waiting") return Util.alpha("#a855f7", 0.2)
+                if (st === "done") return Util.alpha("#10b981", 0.2)
+                if (st === "cancelled") return Util.alpha("#94a3b8", 0.2)
+                if (st === "idea") return Util.alpha("#ec4899", 0.2)
+                return Util.alpha(root.foreground, 0.15)
+              }
+              border.color: {
+                if (!captureModal.detected) return "transparent"
+                var st = captureModal.detected.status
+                if (st === "todo") return "#38bdf8"
+                if (st === "working") return "#f59e0b"
+                if (st === "waiting") return "#a855f7"
+                if (st === "done") return "#10b981"
+                if (st === "cancelled") return "#94a3b8"
+                if (st === "idea") return "#ec4899"
+                return root.foreground
+              }
+              border.width: 1
+
+              Text {
+                id: detTypeText
+                anchors.centerIn: parent
+                text: {
+                  if (!captureModal.detected) return ""
+                  var st = captureModal.detected.status
+                  if (st === "todo") return "○ TODO"
+                  if (st === "working") return "◐ WORKING"
+                  if (st === "waiting") return "⏳ WAITING"
+                  if (st === "done") return "✓ DONE"
+                  if (st === "cancelled") return "✗ CANCELLED"
+                  if (st === "idea") return "󰌵 IDEA"
+                  if (st === "note") return "󰎞 NOTE"
+                  return st.toUpperCase()
+                }
+                color: {
+                  if (!captureModal.detected) return root.foreground
+                  var st = captureModal.detected.status
+                  if (st === "todo") return "#38bdf8"
+                  if (st === "working") return "#f59e0b"
+                  if (st === "waiting") return "#a855f7"
+                  if (st === "done") return "#10b981"
+                  if (st === "cancelled") return "#94a3b8"
+                  if (st === "idea") return "#ec4899"
+                  return root.foreground
+                }
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+            }
+
+            // Priority Badge
+            Rectangle {
+              visible: captureModal.detected && captureModal.detected.priority === "high"
+              height: Style.space(20)
+              width: Style.space(68)
+              radius: Style.space(4)
+              color: Util.alpha(Color.urgent, 0.2)
+              border.color: Color.urgent
+              border.width: 1
+              anchors.verticalCenter: parent.verticalCenter
+
+              Text {
+                anchors.centerIn: parent
+                text: "! Urgent"
+                color: Color.urgent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+            }
+
+            // Deadline Badge
+            Rectangle {
+              visible: captureModal.detected && Boolean(captureModal.detected.deadline)
+              height: Style.space(20)
+              width: detDeadText.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(Color.accent, 0.15)
+              border.color: Util.alpha(Color.accent, 0.35)
+              border.width: 1
+              anchors.verticalCenter: parent.verticalCenter
+
+              Row {
+                anchors.centerIn: parent
+                spacing: Style.space(3)
+                Text { text: "󰃰"; color: Color.accent; font.pixelSize: Style.font.caption }
+                Text {
+                  id: detDeadText
+                  text: captureModal.detected ? captureModal.detected.deadline : ""
+                  color: Color.accent
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.caption
+                }
+              }
+            }
+
+            // Clean Title preview
+            Text {
+              text: captureModal.detected ? captureModal.detected.title : ""
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.body
+              elide: Text.ElideRight
+              width: parent.width - Style.space(320)
+              anchors.verticalCenter: parent.verticalCenter
+            }
+          }
+        }
+
         // Interactive Syntax Quick Buttons
         Column {
           width: parent.width
@@ -382,12 +568,13 @@ Item {
 
             // . Todo
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "todo"
               height: Style.space(24)
               width: p1Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha("#38bdf8", 0.15)
-              border.color: Util.alpha("#38bdf8", 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha("#38bdf8", 0.35) : Util.alpha("#38bdf8", 0.12)
+              border.color: isCurrent ? "#38bdf8" : Util.alpha("#38bdf8", 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p1Text
@@ -408,17 +595,18 @@ Item {
 
             // / Working
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "working"
               height: Style.space(24)
               width: p2Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha("#f59e0b", 0.15)
-              border.color: Util.alpha("#f59e0b", 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha("#f59e0b", 0.35) : Util.alpha("#f59e0b", 0.12)
+              border.color: isCurrent ? "#f59e0b" : Util.alpha("#f59e0b", 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p2Text
                 anchors.centerIn: parent
-                text: "/ Working"
+                text: "/ Work"
                 color: "#f59e0b"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
@@ -434,12 +622,13 @@ Item {
 
             // /. Waiting
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "waiting"
               height: Style.space(24)
               width: p3Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha("#a855f7", 0.15)
-              border.color: Util.alpha("#a855f7", 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha("#a855f7", 0.35) : Util.alpha("#a855f7", 0.12)
+              border.color: isCurrent ? "#a855f7" : Util.alpha("#a855f7", 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p3Text
@@ -458,14 +647,69 @@ Item {
               }
             }
 
+            // x Done
+            Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "done"
+              height: Style.space(24)
+              width: pxText.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: isCurrent ? Util.alpha("#10b981", 0.35) : Util.alpha("#10b981", 0.12)
+              border.color: isCurrent ? "#10b981" : Util.alpha("#10b981", 0.3)
+              border.width: isCurrent ? 2 : 1
+
+              Text {
+                id: pxText
+                anchors.centerIn: parent
+                text: "x Done"
+                color: "#10b981"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("x ", true)
+              }
+            }
+
+            // z Cancelled
+            Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "cancelled"
+              height: Style.space(24)
+              width: p6Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: isCurrent ? Util.alpha("#94a3b8", 0.35) : Util.alpha("#94a3b8", 0.12)
+              border.color: isCurrent ? "#94a3b8" : Util.alpha("#94a3b8", 0.3)
+              border.width: isCurrent ? 2 : 1
+
+              Text {
+                id: p6Text
+                anchors.centerIn: parent
+                text: "z Cancel"
+                color: "#94a3b8"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("z ", true)
+              }
+            }
+
             // ? Idea
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "idea"
               height: Style.space(24)
               width: p4Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha("#ec4899", 0.15)
-              border.color: Util.alpha("#ec4899", 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha("#ec4899", 0.35) : Util.alpha("#ec4899", 0.12)
+              border.color: isCurrent ? "#ec4899" : Util.alpha("#ec4899", 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p4Text
@@ -486,12 +730,13 @@ Item {
 
             // - Note
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.status === "note"
               height: Style.space(24)
               width: p5Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha(root.foreground, 0.1)
-              border.color: Util.alpha(root.border, 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha(root.foreground, 0.25) : Util.alpha(root.foreground, 0.08)
+              border.color: isCurrent ? root.foreground : Util.alpha(root.border, 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p5Text
@@ -507,32 +752,6 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.insertTokenIntoCapture("- ", true)
-              }
-            }
-
-            // z Cancelled
-            Rectangle {
-              height: Style.space(24)
-              width: p6Text.implicitWidth + Style.space(12)
-              radius: Style.space(4)
-              color: Util.alpha("#94a3b8", 0.15)
-              border.color: Util.alpha("#94a3b8", 0.3)
-              border.width: 1
-
-              Text {
-                id: p6Text
-                anchors.centerIn: parent
-                text: "z Cancel"
-                color: "#94a3b8"
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.caption
-                font.bold: true
-              }
-
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.insertTokenIntoCapture("z ", true)
               }
             }
           }
@@ -552,12 +771,13 @@ Item {
 
             // ! Priority
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.priority === "high"
               height: Style.space(24)
               width: m1Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha(Color.urgent, 0.15)
-              border.color: Util.alpha(Color.urgent, 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha(Color.urgent, 0.35) : Util.alpha(Color.urgent, 0.12)
+              border.color: isCurrent ? Color.urgent : Util.alpha(Color.urgent, 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: m1Text
@@ -578,12 +798,13 @@ Item {
 
             // @ Deadline
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && Boolean(captureModal.detected.deadline)
               height: Style.space(24)
               width: m2Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha(Color.accent, 0.12)
-              border.color: Util.alpha(Color.accent, 0.3)
-              border.width: 1
+              color: isCurrent ? Util.alpha(Color.accent, 0.3) : Util.alpha(Color.accent, 0.1)
+              border.color: isCurrent ? Color.accent : Util.alpha(Color.accent, 0.3)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: m2Text
@@ -603,18 +824,19 @@ Item {
 
             // :tag:
             Rectangle {
+              readonly property bool isCurrent: captureModal.detected && captureModal.detected.tags && captureModal.detected.tags.length > 0
               height: Style.space(24)
               width: m3Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha(root.foreground, 0.08)
-              border.color: Util.alpha(root.border, 0.2)
-              border.width: 1
+              color: isCurrent ? Util.alpha(root.foreground, 0.2) : Util.alpha(root.foreground, 0.08)
+              border.color: isCurrent ? Color.accent : Util.alpha(root.border, 0.2)
+              border.width: isCurrent ? 2 : 1
 
               Text {
                 id: m3Text
                 anchors.centerIn: parent
                 text: ":tag:"
-                color: root.foreground
+                color: isCurrent ? Color.accent : root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
               }
@@ -756,14 +978,14 @@ Item {
             }
             event.accepted = true
           } else if (event.key === Qt.Key_Space) {
-            // Cycle status loop in Kanban mode!
+            // Cycle status loop in Kanban mode while following focus!
             if (root.viewMode === "kanban") {
               var curTask = root.getSelectedTask()
               if (curTask) {
                 if (event.modifiers & Qt.ShiftModifier) {
-                  root.cycleItemStatus(curTask.id, -1)
+                  root.cycleItemStatusAndFollow(curTask.id, -1)
                 } else {
-                  root.cycleItemStatus(curTask.id, 1)
+                  root.cycleItemStatusAndFollow(curTask.id, 1)
                 }
               }
             }
@@ -773,7 +995,7 @@ Item {
               var curTaskD = root.getSelectedTask()
               if (curTaskD) {
                 var nextSt = curTaskD.status === "done" ? "todo" : "done"
-                root.updateStatus(curTaskD.id, nextSt)
+                root.updateStatusAndFollow(curTaskD.id, nextSt)
               }
             }
             event.accepted = true
@@ -781,7 +1003,7 @@ Item {
             if (root.viewMode === "kanban") {
               var curTaskZ = root.getSelectedTask()
               if (curTaskZ) {
-                root.updateStatus(curTaskZ.id, "cancelled")
+                root.updateStatusAndFollow(curTaskZ.id, "cancelled")
               }
             }
             event.accepted = true
@@ -796,35 +1018,35 @@ Item {
           } else if (event.key === Qt.Key_1) {
             if (root.viewMode === "kanban") {
               var t1 = root.getSelectedTask()
-              if (t1) root.updateStatus(t1.id, "todo")
+              if (t1) root.updateStatusAndFollow(t1.id, "todo")
               else root.activeColumnIndex = 0
             }
             event.accepted = true
           } else if (event.key === Qt.Key_2) {
             if (root.viewMode === "kanban") {
               var t2 = root.getSelectedTask()
-              if (t2) root.updateStatus(t2.id, "working")
+              if (t2) root.updateStatusAndFollow(t2.id, "working")
               else root.activeColumnIndex = 1
             }
             event.accepted = true
           } else if (event.key === Qt.Key_3) {
             if (root.viewMode === "kanban") {
               var t3 = root.getSelectedTask()
-              if (t3) root.updateStatus(t3.id, "waiting")
+              if (t3) root.updateStatusAndFollow(t3.id, "waiting")
               else root.activeColumnIndex = 2
             }
             event.accepted = true
           } else if (event.key === Qt.Key_4) {
             if (root.viewMode === "kanban") {
               var t4 = root.getSelectedTask()
-              if (t4) root.updateStatus(t4.id, "done")
+              if (t4) root.updateStatusAndFollow(t4.id, "done")
               else root.activeColumnIndex = 3
             }
             event.accepted = true
           } else if (event.key === Qt.Key_5) {
             if (root.viewMode === "kanban") {
               var t5 = root.getSelectedTask()
-              if (t5) root.updateStatus(t5.id, "cancelled")
+              if (t5) root.updateStatusAndFollow(t5.id, "cancelled")
               else root.activeColumnIndex = 4
             }
             event.accepted = true

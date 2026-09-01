@@ -161,7 +161,7 @@ Rectangle {
           cursorShape: Qt.PointingHandCursor
           onClicked: {
             if (root.rootView && root.cardData) {
-              root.rootView.cycleItemStatus(root.cardData.id, -1)
+              root.rootView.cycleItemStatusAndFollow(root.cardData.id, -1)
             }
           }
         }
@@ -186,7 +186,7 @@ Rectangle {
           cursorShape: Qt.PointingHandCursor
           onClicked: {
             if (root.rootView && root.cardData) {
-              root.rootView.cycleItemStatus(root.cardData.id, 1)
+              root.rootView.cycleItemStatusAndFollow(root.cardData.id, 1)
             }
           }
         }
@@ -213,7 +213,7 @@ Rectangle {
           onClicked: {
             if (root.rootView && root.cardData) {
               var next = root.isDone ? "todo" : "done"
-              root.rootView.updateStatus(root.cardData.id, next)
+              root.rootView.updateStatusAndFollow(root.cardData.id, next)
             }
           }
         }
