@@ -49,7 +49,7 @@ Panel {
     bar: root.bar
     open: root.opened
     focusTarget: keyCatcher
-    contentWidth: panel.fittedContentWidth(Style.space(360))
+    contentWidth: panel.fittedContentWidth(Style.space(380))
     contentHeight: panel.fittedContentHeight(contentCol.implicitHeight + Style.space(24))
 
     PanelKeyCatcher {
@@ -60,8 +60,8 @@ Panel {
       BorderSurface {
         anchors.fill: parent
         color: Color.menu.background
-        borderSpec: Border.surfaceSpec("menu", "border", Color.menu.border, Style.normalBorderWidth)
-        radius: Style.cornerRadius + 2
+        borderSpec: Border.surfaceSpec("menu", "border", Color.accent, Style.space(1.5))
+        radius: Style.cornerRadius + 4
 
         Column {
           id: contentCol
@@ -83,7 +83,7 @@ Panel {
                 width: Style.space(26)
                 height: Style.space(26)
                 radius: Style.space(5)
-                color: Util.alpha(Color.accent, 0.18)
+                color: Util.alpha(Color.accent, 0.22)
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
@@ -97,7 +97,7 @@ Panel {
               }
 
               Text {
-                text: "SPAI Tasks"
+                text: "SPAI Tasks Overview"
                 color: "#ffffff"
                 font.family: Style.font.family
                 font.pixelSize: Style.font.subtitle
@@ -113,8 +113,8 @@ Panel {
               height: Style.space(22)
               width: countBadgeText.implicitWidth + Style.space(12)
               radius: Style.space(11)
-              color: Util.alpha(Color.accent, 0.18)
-              border.color: Util.alpha(Color.accent, 0.35)
+              color: Util.alpha(Color.accent, 0.2)
+              border.color: Color.accent
               border.width: 1
 
               Text {
@@ -136,93 +136,93 @@ Panel {
             color: Util.alpha(Color.menu.border, 0.25)
           }
 
-          // 2. 5 Linkarzu Status Chips Grid
+          // 2. 5 Linkarzu Status Chips Grid (Vibrant, colorful 1-row layout)
           Row {
             width: parent.width
             spacing: Style.space(5)
 
-            // Todo
+            // Todo (Vivid Pink)
             Rectangle {
               width: (parent.width - Style.space(20)) / 5
-              height: Style.space(38)
+              height: Style.space(42)
               radius: Style.space(5)
-              color: Util.alpha("#f94dff", 0.14)
-              border.color: Util.alpha("#f94dff", 0.35)
+              color: Util.alpha("#f94dff", 0.18)
+              border.color: "#f94dff"
               border.width: 1
 
               Column {
                 anchors.centerIn: parent
                 spacing: 1
                 Text { text: "○ TODO"; color: "#f94dff"; font.pixelSize: Style.font.caption; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: root.stats.todo.toString(); color: "#ffffff"; font.pixelSize: Style.font.bodySmall; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: root.stats.todo.toString(); color: "#ffffff"; font.pixelSize: Style.font.title; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
               }
             }
 
-            // Working
+            // Working (Electric Gold / Yellow)
             Rectangle {
               width: (parent.width - Style.space(20)) / 5
-              height: Style.space(38)
+              height: Style.space(42)
               radius: Style.space(5)
-              color: Util.alpha("#f1fc79", 0.14)
-              border.color: Util.alpha("#f1fc79", 0.35)
+              color: Util.alpha("#f1fc79", 0.18)
+              border.color: "#f1fc79"
               border.width: 1
 
               Column {
                 anchors.centerIn: parent
                 spacing: 1
                 Text { text: "◐ WORK"; color: "#f1fc79"; font.pixelSize: Style.font.caption; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: root.stats.working.toString(); color: "#ffffff"; font.pixelSize: Style.font.bodySmall; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: root.stats.working.toString(); color: "#ffffff"; font.pixelSize: Style.font.title; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
               }
             }
 
-            // Waiting
+            // Waiting (Neon Violet / Purple)
             Rectangle {
               width: (parent.width - Style.space(20)) / 5
-              height: Style.space(38)
+              height: Style.space(42)
               radius: Style.space(5)
-              color: Util.alpha("#987afb", 0.14)
-              border.color: Util.alpha("#987afb", 0.35)
+              color: Util.alpha("#987afb", 0.18)
+              border.color: "#987afb"
               border.width: 1
 
               Column {
                 anchors.centerIn: parent
                 spacing: 1
                 Text { text: "⏳ WAIT"; color: "#987afb"; font.pixelSize: Style.font.caption; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: root.stats.waiting.toString(); color: "#ffffff"; font.pixelSize: Style.font.bodySmall; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: root.stats.waiting.toString(); color: "#ffffff"; font.pixelSize: Style.font.title; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
               }
             }
 
-            // Done
+            // Done (Neon Mint Green)
             Rectangle {
               width: (parent.width - Style.space(20)) / 5
-              height: Style.space(38)
+              height: Style.space(42)
               radius: Style.space(5)
-              color: Util.alpha("#37f499", 0.14)
-              border.color: Util.alpha("#37f499", 0.35)
+              color: Util.alpha("#37f499", 0.18)
+              border.color: "#37f499"
               border.width: 1
 
               Column {
                 anchors.centerIn: parent
                 spacing: 1
                 Text { text: "✓ DONE"; color: "#37f499"; font.pixelSize: Style.font.caption; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: root.stats.done.toString(); color: "#ffffff"; font.pixelSize: Style.font.bodySmall; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: root.stats.done.toString(); color: "#ffffff"; font.pixelSize: Style.font.title; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
               }
             }
 
-            // Cancelled
+            // Cancelled (Slate Grey)
             Rectangle {
               width: (parent.width - Style.space(20)) / 5
-              height: Style.space(38)
+              height: Style.space(42)
               radius: Style.space(5)
-              color: Util.alpha("#5f6b8a", 0.14)
-              border.color: Util.alpha("#5f6b8a", 0.35)
+              color: Util.alpha("#5f6b8a", 0.18)
+              border.color: "#5f6b8a"
               border.width: 1
 
               Column {
                 anchors.centerIn: parent
                 spacing: 1
                 Text { text: "✗ CANCEL"; color: "#5f6b8a"; font.pixelSize: Style.font.caption; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: root.stats.cancelled.toString(); color: "#ffffff"; font.pixelSize: Style.font.bodySmall; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: root.stats.cancelled.toString(); color: "#ffffff"; font.pixelSize: Style.font.title; font.bold: true; anchors.horizontalCenter: parent.horizontalCenter }
               }
             }
           }
@@ -240,10 +240,14 @@ Panel {
 
               Rectangle {
                 width: parent.width
-                height: Style.space(26)
+                height: Style.space(28)
                 radius: Style.space(4)
                 color: Util.alpha(Color.menu.text, 0.05)
-                border.color: Util.alpha(Color.menu.border, 0.15)
+                border.color: {
+                  if (modelData.status === "working") return Util.alpha("#f1fc79", 0.4)
+                  if (modelData.status === "waiting") return Util.alpha("#987afb", 0.4)
+                  return Util.alpha("#f94dff", 0.4)
+                }
                 border.width: 1
 
                 Row {
@@ -267,7 +271,7 @@ Panel {
                     height: Style.space(16)
                     width: Style.space(16)
                     radius: Style.space(3)
-                    color: Util.alpha("#f16c75", 0.2)
+                    color: Util.alpha("#f16c75", 0.25)
                     border.color: "#f16c75"
                     border.width: 1
                     anchors.verticalCenter: parent.verticalCenter
@@ -297,7 +301,7 @@ Panel {
             }
           }
 
-          // 4. Notes & Ideas Summary
+          // 4. Notes & Ideas Summary Row
           Item {
             width: parent.width
             height: Style.space(22)
@@ -311,8 +315,8 @@ Panel {
                 height: Style.space(20)
                 width: notesCountText.implicitWidth + Style.space(10)
                 radius: Style.space(4)
-                color: Util.alpha("#04d1f9", 0.12)
-                border.color: Util.alpha("#04d1f9", 0.3)
+                color: Util.alpha("#04d1f9", 0.16)
+                border.color: "#04d1f9"
                 border.width: 1
 
                 Text {
@@ -329,8 +333,8 @@ Panel {
                 height: Style.space(20)
                 width: ideasCountText.implicitWidth + Style.space(10)
                 radius: Style.space(4)
-                color: Util.alpha("#ec4899", 0.12)
-                border.color: Util.alpha("#ec4899", 0.3)
+                color: Util.alpha("#ec4899", 0.16)
+                border.color: "#ec4899"
                 border.width: 1
 
                 Text {
@@ -356,8 +360,8 @@ Panel {
               width: (parent.width - Style.space(8)) / 2
               height: parent.height
               radius: Style.space(5)
-              color: Util.alpha(Color.accent, 0.18)
-              border.color: Util.alpha(Color.accent, 0.4)
+              color: Util.alpha(Color.accent, 0.2)
+              border.color: Color.accent
               border.width: 1
 
               Row {
