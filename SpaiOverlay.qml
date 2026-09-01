@@ -36,10 +36,9 @@ Item {
   property int contentMargin: Style.spacing.panelPadding
   property int contentSpacing: Style.spacing.md
 
-  property int modalWidth: Math.min(Style.space(1100), panel.width - Style.gapsOut * 2)
-  property int modalHeight: Math.min(Style.space(700), panel.height - Style.gapsOut * 2)
-  property int captureWidth: Math.min(Style.space(650), panel.width - Style.gapsOut * 2)
-  property int captureHeight: Style.space(240)
+  property int modalWidth: Math.min(Style.space(1180), panel.width - Style.gapsOut * 2)
+  property int modalHeight: Math.min(Style.space(720), panel.height - Style.gapsOut * 2)
+  property int captureWidth: Math.min(Style.space(660), panel.width - Style.gapsOut * 2)
   property alias captureInputText: captureInput.text
 
   function open(payloadJson) {
@@ -125,6 +124,24 @@ Item {
     return SpaiModel.filterItems(root.allItems, root.filterText, typeFilter, statusFilter)
   }
 
+  function insertTokenIntoCapture(token, isPrefix) {
+    var cur = captureInput.text
+    if (isPrefix) {
+      // Remove existing prefix if any
+      var prefixes = SpaiModel.getSpaiPrefixes()
+      for (var i = 0; i < prefixes.length; i++) {
+        if (cur.indexOf(prefixes[i].prefix) === 0) {
+          cur = cur.slice(prefixes[i].prefix.length)
+          break
+        }
+      }
+      captureInput.text = token + cur
+    } else {
+      captureInput.text = cur + (cur && !cur.endsWith(" ") ? " " : "") + token + " "
+    }
+    captureInput.forceActiveFocus()
+  }
+
   Process {
     id: initProc
     command: ["mkdir", "-p", root.spaiDataDir]
@@ -168,148 +185,457 @@ Item {
       id: captureModal
       visible: root.viewMode === "capture"
       width: root.captureWidth
-      height: root.captureHeight
-      radius: root.cornerRadius
+      height: captureCol.implicitHeight + Style.space(36)
+      radius: root.cornerRadius + Style.space(4)
       anchors.centerIn: parent
       color: root.background
       borderSpec: root.borderSpec
-      padding: root.contentMargin
 
       MouseArea { anchors.fill: parent; onClicked: {} }
 
       Column {
+        id: captureCol
         anchors.fill: parent
-        spacing: Style.space(12)
+        anchors.margins: Style.space(18)
+        spacing: Style.space(14)
 
+        // Header
         Row {
           width: parent.width
-          spacing: Style.space(8)
+          height: Style.space(32)
 
-          Text {
-            text: "󰄲"
-            color: Color.accent
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.heading
-            verticalAlignment: Text.AlignVCenter
-          }
+          Row {
+            spacing: Style.space(8)
+            anchors.verticalCenter: parent.verticalCenter
 
-          Text {
-            text: "SPAI Quick Capture"
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.heading
-            font.bold: true
-            verticalAlignment: Text.AlignVCenter
+            Rectangle {
+              width: Style.space(28)
+              height: Style.space(28)
+              radius: Style.space(6)
+              color: Util.alpha(Color.accent, 0.18)
+              anchors.verticalCenter: parent.verticalCenter
+
+              Text {
+                anchors.centerIn: parent
+                text: "󰄲"
+                color: Color.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.subtitle
+                font.bold: true
+              }
+            }
+
+            Text {
+              text: "SPAI Quick Capture"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.heading
+              font.bold: true
+              anchors.verticalCenter: parent.verticalCenter
+            }
           }
 
           Item {
-            width: Math.max(0, parent.width - Style.space(350))
+            width: Math.max(0, parent.width - Style.space(400))
             height: 1
           }
 
-          Text {
-            text: "Esc to close · Enter to save"
-            color: Color.muted
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+          // Keycap Hints
+          Row {
+            spacing: Style.space(6)
             anchors.verticalCenter: parent.verticalCenter
+
+            Rectangle {
+              height: Style.space(22)
+              width: escKeyText.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(root.foreground, 0.08)
+              border.color: Util.alpha(root.border, 0.2)
+              border.width: 1
+
+              Text {
+                id: escKeyText
+                anchors.centerIn: parent
+                text: "Esc Cancel"
+                color: Color.muted
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+            }
+
+            Rectangle {
+              height: Style.space(22)
+              width: enterKeyText.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(Color.accent, 0.2)
+              border.color: Util.alpha(Color.accent, 0.4)
+              border.width: 1
+
+              Text {
+                id: enterKeyText
+                anchors.centerIn: parent
+                text: "↵ Enter Save"
+                color: Color.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+            }
           }
         }
 
+        // Input Box
         Rectangle {
           width: parent.width
-          height: Style.space(46)
+          height: Style.space(48)
           radius: root.cornerRadius
-          color: Util.alpha(root.foreground, 0.08)
-          border.color: captureInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.4)
-          border.width: Style.normalBorderWidth
+          color: Util.alpha(root.foreground, 0.05)
+          border.color: captureInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.3)
+          border.width: captureInput.activeFocus ? Style.space(2) : Style.normalBorderWidth
 
-          TextInput {
-            id: captureInput
+          Row {
             anchors.fill: parent
-            anchors.margins: Style.space(10)
-            color: root.foreground
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.body
-            verticalAlignment: TextInput.AlignVCenter
-            clip: true
+            anchors.leftMargin: Style.space(12)
+            anchors.rightMargin: Style.space(12)
+            spacing: Style.space(8)
 
-            Keys.onEscapePressed: function(event) {
-              root.close()
-              event.accepted = true
-            }
-
-            Keys.onReturnPressed: function(event) {
-              if (captureInput.text.trim()) {
-                root.addNewItem(captureInput.text)
-                captureInput.text = ""
-                root.close()
-              }
-              event.accepted = true
-            }
-
-            Text {
-              visible: !captureInput.text
-              text: "e.g. . Buy groceries ! @tomorrow :home: or ? New project idea"
-              color: Color.muted
+            TextInput {
+              id: captureInput
+              width: parent.width
+              height: parent.height
+              color: root.foreground
               font.family: root.fontFamily
-              font.pixelSize: Style.font.body
-              anchors.fill: parent
-              verticalAlignment: Text.AlignVCenter
+              font.pixelSize: Style.font.title
+              verticalAlignment: TextInput.AlignVCenter
+              clip: true
+
+              Keys.onEscapePressed: function(event) {
+                root.close()
+                event.accepted = true
+              }
+
+              Keys.onReturnPressed: function(event) {
+                if (captureInput.text.trim()) {
+                  root.addNewItem(captureInput.text)
+                  captureInput.text = ""
+                  root.close()
+                }
+                event.accepted = true
+              }
+
+              Text {
+                visible: !captureInput.text
+                text: "e.g. . Review design ! @tomorrow :ui: or ? Fresh idea"
+                color: Color.muted
+                opacity: 0.6
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.title
+                anchors.fill: parent
+                verticalAlignment: Text.AlignVCenter
+              }
             }
           }
         }
 
-        // SPAI Syntax Hints bar
+        // Interactive Syntax Quick Buttons
+        Column {
+          width: parent.width
+          spacing: Style.space(8)
+
+          // Prefix Buttons
+          Row {
+            spacing: Style.space(6)
+
+            Text {
+              text: "Type:"
+              color: Color.muted
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              anchors.verticalCenter: parent.verticalCenter
+              width: Style.space(40)
+            }
+
+            // . Todo
+            Rectangle {
+              height: Style.space(24)
+              width: p1Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha("#38bdf8", 0.15)
+              border.color: Util.alpha("#38bdf8", 0.3)
+              border.width: 1
+
+              Text {
+                id: p1Text
+                anchors.centerIn: parent
+                text: ". Todo"
+                color: "#38bdf8"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture(". ", true)
+              }
+            }
+
+            // / Working
+            Rectangle {
+              height: Style.space(24)
+              width: p2Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha("#f59e0b", 0.15)
+              border.color: Util.alpha("#f59e0b", 0.3)
+              border.width: 1
+
+              Text {
+                id: p2Text
+                anchors.centerIn: parent
+                text: "/ Working"
+                color: "#f59e0b"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("/ ", true)
+              }
+            }
+
+            // /. Waiting
+            Rectangle {
+              height: Style.space(24)
+              width: p3Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha("#a855f7", 0.15)
+              border.color: Util.alpha("#a855f7", 0.3)
+              border.width: 1
+
+              Text {
+                id: p3Text
+                anchors.centerIn: parent
+                text: "/. Wait"
+                color: "#a855f7"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("/. ", true)
+              }
+            }
+
+            // ? Idea
+            Rectangle {
+              height: Style.space(24)
+              width: p4Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha("#ec4899", 0.15)
+              border.color: Util.alpha("#ec4899", 0.3)
+              border.width: 1
+
+              Text {
+                id: p4Text
+                anchors.centerIn: parent
+                text: "? Idea"
+                color: "#ec4899"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("? ", true)
+              }
+            }
+
+            // - Note
+            Rectangle {
+              height: Style.space(24)
+              width: p5Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(root.foreground, 0.1)
+              border.color: Util.alpha(root.border, 0.3)
+              border.width: 1
+
+              Text {
+                id: p5Text
+                anchors.centerIn: parent
+                text: "- Note"
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("- ", true)
+              }
+            }
+          }
+
+          // Modifier Buttons (!, @, :)
+          Row {
+            spacing: Style.space(6)
+
+            Text {
+              text: "Meta:"
+              color: Color.muted
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              anchors.verticalCenter: parent.verticalCenter
+              width: Style.space(40)
+            }
+
+            // ! Priority
+            Rectangle {
+              height: Style.space(24)
+              width: m1Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(Color.urgent, 0.15)
+              border.color: Util.alpha(Color.urgent, 0.3)
+              border.width: 1
+
+              Text {
+                id: m1Text
+                anchors.centerIn: parent
+                text: "! Urgent"
+                color: Color.urgent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("!", false)
+              }
+            }
+
+            // @ Deadline
+            Rectangle {
+              height: Style.space(24)
+              width: m2Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(Color.accent, 0.12)
+              border.color: Util.alpha(Color.accent, 0.3)
+              border.width: 1
+
+              Text {
+                id: m2Text
+                anchors.centerIn: parent
+                text: "@date"
+                color: Color.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("@today", false)
+              }
+            }
+
+            // :tag:
+            Rectangle {
+              height: Style.space(24)
+              width: m3Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha(root.foreground, 0.08)
+              border.color: Util.alpha(root.border, 0.2)
+              border.width: 1
+
+              Text {
+                id: m3Text
+                anchors.centerIn: parent
+                text: ":tag:"
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture(":tag:", false)
+              }
+            }
+          }
+        }
+
+        // Action Buttons Row
         Row {
           width: parent.width
+          height: Style.space(34)
           spacing: Style.space(10)
 
-          Rectangle {
-            radius: Style.space(4)
-            color: Util.alpha(Color.accent, 0.15)
-            height: Style.space(24)
-            width: prefixHintText.implicitWidth + Style.space(12)
-
-            Text {
-              id: prefixHintText
-              anchors.centerIn: parent
-              text: ". Todo   / Work   /. Wait   ? Idea   - Note"
-              color: Color.accent
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
-            }
+          Item {
+            width: Math.max(0, parent.width - Style.space(240))
+            height: 1
           }
 
+          // Cancel Button
           Rectangle {
-            radius: Style.space(4)
-            color: Util.alpha(Color.urgent, 0.15)
-            height: Style.space(24)
-            width: prioHintText.implicitWidth + Style.space(12)
+            height: Style.space(32)
+            width: Style.space(100)
+            radius: root.cornerRadius
+            color: Util.alpha(root.foreground, 0.08)
 
             Text {
-              id: prioHintText
               anchors.centerIn: parent
-              text: "! Priority"
-              color: Color.urgent
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
-            }
-          }
-
-          Rectangle {
-            radius: Style.space(4)
-            color: Util.alpha(root.foreground, 0.12)
-            height: Style.space(24)
-            width: metaHintText.implicitWidth + Style.space(12)
-
-            Text {
-              id: metaHintText
-              anchors.centerIn: parent
-              text: "@date   :tags:"
+              text: "Cancel"
               color: root.foreground
               font.family: root.fontFamily
-              font.pixelSize: Style.font.caption
+              font.pixelSize: Style.font.subtitle
+            }
+
+            MouseArea {
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.close()
+            }
+          }
+
+          // Save Button
+          Rectangle {
+            height: Style.space(32)
+            width: Style.space(120)
+            radius: root.cornerRadius
+            color: Color.accent
+
+            Text {
+              anchors.centerIn: parent
+              text: "Save Task"
+              color: Color.background
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.subtitle
+              font.bold: true
+            }
+
+            MouseArea {
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              onClicked: {
+                if (captureInput.text.trim()) {
+                  root.addNewItem(captureInput.text)
+                  captureInput.text = ""
+                  root.close()
+                }
+              }
             }
           }
         }
@@ -324,11 +650,10 @@ Item {
       visible: root.viewMode !== "capture"
       width: root.modalWidth
       height: root.modalHeight
-      radius: root.cornerRadius
+      radius: root.cornerRadius + Style.space(4)
       anchors.centerIn: parent
       color: root.background
       borderSpec: root.borderSpec
-      padding: root.contentMargin
 
       MouseArea { anchors.fill: parent; onClicked: {} }
 
@@ -393,7 +718,8 @@ Item {
 
       Column {
         anchors.fill: parent
-        spacing: root.contentSpacing
+        anchors.margins: Style.space(16)
+        spacing: Style.space(14)
 
         // --- Header Bar ---
         Row {
@@ -401,17 +727,26 @@ Item {
           height: Style.space(38)
           spacing: Style.space(12)
 
-          // Logo / Brand
+          // Brand
           Row {
-            spacing: Style.space(6)
+            spacing: Style.space(8)
             anchors.verticalCenter: parent.verticalCenter
 
-            Text {
-              text: "󰄲"
-              color: Color.accent
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.heading
-              font.bold: true
+            Rectangle {
+              width: Style.space(30)
+              height: Style.space(30)
+              radius: Style.space(6)
+              color: Util.alpha(Color.accent, 0.18)
+              anchors.verticalCenter: parent.verticalCenter
+
+              Text {
+                anchors.centerIn: parent
+                text: "󰄲"
+                color: Color.accent
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.subtitle
+                font.bold: true
+              }
             }
 
             Text {
@@ -420,19 +755,21 @@ Item {
               font.family: root.fontFamily
               font.pixelSize: Style.font.heading
               font.bold: true
+              anchors.verticalCenter: parent.verticalCenter
             }
           }
 
-          // Tabs: Kanban, Notes, Ideas
+          // Tabs Switcher
           Row {
-            spacing: Style.space(6)
+            spacing: Style.space(4)
             anchors.verticalCenter: parent.verticalCenter
 
+            // Kanban Tab
             Rectangle {
               height: Style.space(32)
-              width: tabKanbanText.implicitWidth + Style.space(20)
+              width: tabKanbanText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
-              color: root.viewMode === "kanban" ? root.selectedBackground : Util.alpha(root.foreground, 0.08)
+              color: root.viewMode === "kanban" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
 
               Text {
                 id: tabKanbanText
@@ -451,11 +788,12 @@ Item {
               }
             }
 
+            // Notes Tab
             Rectangle {
               height: Style.space(32)
-              width: tabNotesText.implicitWidth + Style.space(20)
+              width: tabNotesText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
-              color: root.viewMode === "notes" ? root.selectedBackground : Util.alpha(root.foreground, 0.08)
+              color: root.viewMode === "notes" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
 
               Text {
                 id: tabNotesText
@@ -474,11 +812,12 @@ Item {
               }
             }
 
+            // Ideas Tab
             Rectangle {
               height: Style.space(32)
-              width: tabIdeasText.implicitWidth + Style.space(20)
+              width: tabIdeasText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
-              color: root.viewMode === "ideas" ? root.selectedBackground : Util.alpha(root.foreground, 0.08)
+              color: root.viewMode === "ideas" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
 
               Text {
                 id: tabIdeasText
@@ -499,7 +838,7 @@ Item {
           }
 
           Item {
-            width: Math.max(0, parent.width - Style.space(750))
+            width: Math.max(0, parent.width - Style.space(760))
             height: 1
           }
 
@@ -508,8 +847,8 @@ Item {
             width: Style.space(220)
             height: Style.space(32)
             radius: root.cornerRadius
-            color: Util.alpha(root.foreground, 0.08)
-            border.color: searchInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.3)
+            color: Util.alpha(root.foreground, 0.06)
+            border.color: searchInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.25)
             border.width: Style.normalBorderWidth
             anchors.verticalCenter: parent.verticalCenter
 
@@ -529,7 +868,7 @@ Item {
 
               TextInput {
                 id: searchInput
-                width: parent.width - Style.space(28)
+                width: parent.width - Style.space(40)
                 color: root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.body
@@ -549,12 +888,27 @@ Item {
 
                 Text {
                   visible: !searchInput.text
-                  text: "Search (/)"
+                  text: "Filter (/)..."
                   color: Color.muted
+                  opacity: 0.6
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.body
                   anchors.fill: parent
                   verticalAlignment: Text.AlignVCenter
+                }
+              }
+
+              // Clear button
+              Text {
+                visible: searchInput.text.length > 0
+                text: "✕"
+                color: Color.muted
+                font.pixelSize: Style.font.caption
+                anchors.verticalCenter: parent.verticalCenter
+                MouseArea {
+                  anchors.fill: parent
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: searchInput.text = ""
                 }
               }
             }
@@ -563,7 +917,7 @@ Item {
           // + New Item Button
           Rectangle {
             height: Style.space(32)
-            width: newItemBtnText.implicitWidth + Style.space(24)
+            width: newItemBtnText.implicitWidth + Style.space(20)
             radius: root.cornerRadius
             color: Color.accent
             anchors.verticalCenter: parent.verticalCenter
@@ -582,7 +936,7 @@ Item {
               }
 
               Text {
-                text: "New Item (N)"
+                text: "New (N)"
                 color: Color.background
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
@@ -602,13 +956,35 @@ Item {
               }
             }
           }
+
+          // Close button
+          Rectangle {
+            height: Style.space(32)
+            width: Style.space(32)
+            radius: root.cornerRadius
+            color: Util.alpha(root.foreground, 0.08)
+            anchors.verticalCenter: parent.verticalCenter
+
+            Text {
+              anchors.centerIn: parent
+              text: "✕"
+              color: root.foreground
+              font.pixelSize: Style.font.body
+            }
+
+            MouseArea {
+              anchors.fill: parent
+              cursorShape: Qt.PointingHandCursor
+              onClicked: root.close()
+            }
+          }
         }
 
         // --- Body: KANBAN BOARD ---
         Item {
           visible: root.viewMode === "kanban"
           width: parent.width
-          height: parent.height - Style.space(50)
+          height: parent.height - Style.space(52)
 
           Row {
             anchors.fill: parent
@@ -621,7 +997,7 @@ Item {
               title: "Todo"
               columnStatus: "todo"
               columnType: "Todo"
-              badgeColor: "#3b82f6"
+              badgeColor: "#38bdf8"
               isActive: root.activeColumnIndex === 0
               rootView: root
             }
@@ -668,27 +1044,28 @@ Item {
         Item {
           visible: root.viewMode === "notes"
           width: parent.width
-          height: parent.height - Style.space(50)
+          height: parent.height - Style.space(52)
 
           ListView {
             anchors.fill: parent
             clip: true
-            spacing: Style.space(8)
+            spacing: Style.space(10)
+            boundsBehavior: Flickable.StopAtBounds
             model: root.getFilteredList("Note", "note")
 
             delegate: Rectangle {
               width: ListView.view.width
-              height: noteCol.implicitHeight + Style.space(20)
+              height: noteCol.implicitHeight + Style.space(24)
               radius: root.cornerRadius
-              color: Util.alpha(root.foreground, 0.05)
+              color: Util.alpha(root.foreground, 0.04)
               border.color: Util.alpha(root.border, 0.2)
               border.width: Style.normalBorderWidth
 
               Column {
                 id: noteCol
                 anchors.fill: parent
-                anchors.margins: Style.space(10)
-                spacing: Style.space(6)
+                anchors.margins: Style.space(12)
+                spacing: Style.space(8)
 
                 Row {
                   width: parent.width
@@ -700,13 +1077,14 @@ Item {
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     font.bold: true
-                    width: parent.width - Style.space(60)
+                    width: parent.width - Style.space(50)
                     wrapMode: Text.Wrap
                   }
 
                   Text {
-                    text: "🗑"
-                    font.pixelSize: Style.font.subtitle
+                    text: "✕"
+                    color: Color.muted
+                    font.pixelSize: Style.font.body
                     MouseArea {
                       anchors.fill: parent
                       cursorShape: Qt.PointingHandCursor
@@ -722,21 +1100,48 @@ Item {
                   Repeater {
                     model: modelData.tags
                     Rectangle {
-                      height: Style.space(18)
-                      width: tagNoteText.implicitWidth + Style.space(8)
-                      radius: Style.space(3)
+                      height: Style.space(20)
+                      width: tagNoteText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
                       color: Util.alpha(Color.accent, 0.15)
 
                       Text {
                         id: tagNoteText
                         anchors.centerIn: parent
-                        text: "#" + modelData
+                        text: ":" + modelData + ":"
                         color: Color.accent
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
                       }
                     }
                   }
+                }
+              }
+            }
+
+            // Empty state for Notes
+            Item {
+              anchors.fill: parent
+              visible: root.getFilteredList("Note", "note").length === 0
+
+              Column {
+                anchors.centerIn: parent
+                spacing: Style.space(8)
+
+                Text {
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  text: "󰎞"
+                  color: Color.muted
+                  font.pixelSize: Style.font.displayLarge
+                  opacity: 0.5
+                }
+
+                Text {
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  text: "No notes yet · Press N and type '- Your note'"
+                  color: Color.muted
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.subtitle
                 }
               }
             }
@@ -747,27 +1152,28 @@ Item {
         Item {
           visible: root.viewMode === "ideas"
           width: parent.width
-          height: parent.height - Style.space(50)
+          height: parent.height - Style.space(52)
 
           ListView {
             anchors.fill: parent
             clip: true
-            spacing: Style.space(8)
+            spacing: Style.space(10)
+            boundsBehavior: Flickable.StopAtBounds
             model: root.getFilteredList("Idea", "idea")
 
             delegate: Rectangle {
               width: ListView.view.width
-              height: ideaCol.implicitHeight + Style.space(20)
+              height: ideaCol.implicitHeight + Style.space(24)
               radius: root.cornerRadius
-              color: Util.alpha(root.foreground, 0.05)
+              color: Util.alpha(root.foreground, 0.04)
               border.color: Util.alpha(root.border, 0.2)
               border.width: Style.normalBorderWidth
 
               Column {
                 id: ideaCol
                 anchors.fill: parent
-                anchors.margins: Style.space(10)
-                spacing: Style.space(6)
+                anchors.margins: Style.space(12)
+                spacing: Style.space(8)
 
                 Row {
                   width: parent.width
@@ -779,24 +1185,27 @@ Item {
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     font.bold: true
-                    width: parent.width - Style.space(140)
+                    width: parent.width - Style.space(150)
                     wrapMode: Text.Wrap
                   }
 
                   // Convert to task button
                   Rectangle {
-                    height: Style.space(24)
-                    width: convText.implicitWidth + Style.space(12)
+                    height: Style.space(26)
+                    width: convText.implicitWidth + Style.space(14)
                     radius: Style.space(4)
                     color: Util.alpha(Color.accent, 0.2)
+                    border.color: Util.alpha(Color.accent, 0.4)
+                    border.width: 1
 
                     Text {
                       id: convText
                       anchors.centerIn: parent
-                      text: "→ Task"
+                      text: "→ Convert to Task"
                       color: Color.accent
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
+                      font.bold: true
                     }
 
                     MouseArea {
@@ -807,8 +1216,9 @@ Item {
                   }
 
                   Text {
-                    text: "🗑"
-                    font.pixelSize: Style.font.subtitle
+                    text: "✕"
+                    color: Color.muted
+                    font.pixelSize: Style.font.body
                     MouseArea {
                       anchors.fill: parent
                       cursorShape: Qt.PointingHandCursor
@@ -824,21 +1234,48 @@ Item {
                   Repeater {
                     model: modelData.tags
                     Rectangle {
-                      height: Style.space(18)
-                      width: tagIdeaText.implicitWidth + Style.space(8)
-                      radius: Style.space(3)
-                      color: Util.alpha(Color.accent, 0.15)
+                      height: Style.space(20)
+                      width: tagIdeaText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#ec4899", 0.15)
 
                       Text {
                         id: tagIdeaText
                         anchors.centerIn: parent
-                        text: "#" + modelData
-                        color: Color.accent
+                        text: ":" + modelData + ":"
+                        color: "#ec4899"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
                       }
                     }
                   }
+                }
+              }
+            }
+
+            // Empty state for Ideas
+            Item {
+              anchors.fill: parent
+              visible: root.getFilteredList("Idea", "idea").length === 0
+
+              Column {
+                anchors.centerIn: parent
+                spacing: Style.space(8)
+
+                Text {
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  text: "󰌵"
+                  color: Color.muted
+                  font.pixelSize: Style.font.displayLarge
+                  opacity: 0.5
+                }
+
+                Text {
+                  anchors.horizontalCenter: parent.horizontalCenter
+                  text: "No ideas recorded · Press N and type '? Your idea'"
+                  color: Color.muted
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.subtitle
                 }
               }
             }

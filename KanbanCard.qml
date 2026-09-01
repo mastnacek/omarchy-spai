@@ -11,11 +11,11 @@ Rectangle {
   readonly property bool isDone: cardData && cardData.status === "done"
   readonly property bool isUrgent: cardData && cardData.priority === "high"
 
-  height: cardContent.implicitHeight + Style.space(16)
+  height: cardContent.implicitHeight + Style.space(18)
   radius: Style.cornerRadius
-  color: Util.alpha(Color.menu.background, 0.95)
-  border.color: isUrgent ? Util.alpha(Color.urgent, 0.6) : (cardHover.containsMouse ? Color.accent : Util.alpha(Color.menu.border, 0.2))
-  border.width: Style.normalBorderWidth
+  color: cardHover.containsMouse ? Util.alpha(Color.menu.background, 1.0) : Util.alpha(Color.menu.background, 0.9)
+  border.color: isUrgent ? Util.alpha(Color.urgent, 0.7) : (cardHover.containsMouse ? Color.accent : Util.alpha(Color.menu.border, 0.25))
+  border.width: isUrgent || cardHover.containsMouse ? Style.space(1.5) : Style.normalBorderWidth
 
   MouseArea {
     id: cardHover
@@ -26,8 +26,8 @@ Rectangle {
   Column {
     id: cardContent
     anchors.fill: parent
-    anchors.margins: Style.space(8)
-    spacing: Style.space(6)
+    anchors.margins: Style.space(9)
+    spacing: Style.space(7)
 
     // Top: Title + Priority Mark
     Row {
@@ -37,9 +37,9 @@ Rectangle {
       // Urgent icon if priority: high
       Rectangle {
         visible: root.isUrgent
-        height: Style.space(16)
-        width: Style.space(16)
-        radius: Style.space(8)
+        height: Style.space(18)
+        width: Style.space(18)
+        radius: Style.space(9)
         color: Color.urgent
         anchors.verticalCenter: parent.verticalCenter
 
@@ -59,7 +59,7 @@ Rectangle {
         font.pixelSize: Style.font.body
         font.strikeout: root.isDone
         font.bold: !root.isDone
-        width: parent.width - (root.isUrgent ? Style.space(22) : 0)
+        width: parent.width - (root.isUrgent ? Style.space(24) : 0)
         wrapMode: Text.Wrap
       }
     }
@@ -73,14 +73,16 @@ Rectangle {
       // Deadline Pill
       Rectangle {
         visible: root.cardData && Boolean(root.cardData.deadline)
-        height: Style.space(18)
-        width: deadlineText.implicitWidth + Style.space(10)
-        radius: Style.space(3)
+        height: Style.space(20)
+        width: deadlineText.implicitWidth + Style.space(12)
+        radius: Style.space(4)
         color: Util.alpha(Color.accent, 0.15)
+        border.color: Util.alpha(Color.accent, 0.3)
+        border.width: 1
 
         Row {
           anchors.centerIn: parent
-          spacing: Style.space(3)
+          spacing: Style.space(4)
 
           Text {
             text: "󰃰"
@@ -102,9 +104,9 @@ Rectangle {
       Repeater {
         model: root.cardData && root.cardData.tags ? root.cardData.tags : []
         Rectangle {
-          height: Style.space(18)
-          width: tagText.implicitWidth + Style.space(8)
-          radius: Style.space(3)
+          height: Style.space(20)
+          width: tagText.implicitWidth + Style.space(10)
+          radius: Style.space(4)
           color: Util.alpha(Color.menu.text, 0.08)
 
           Text {
@@ -122,14 +124,14 @@ Rectangle {
     // Bottom Action Bar (Visible on Hover or Touch)
     Row {
       width: parent.width
-      height: Style.space(22)
+      height: Style.space(24)
       spacing: Style.space(6)
       visible: cardHover.containsMouse
 
       // Move Left
       Rectangle {
-        height: Style.space(20)
-        width: Style.space(20)
+        height: Style.space(22)
+        width: Style.space(22)
         radius: Style.space(4)
         color: Util.alpha(Color.menu.text, 0.1)
 
@@ -153,8 +155,8 @@ Rectangle {
 
       // Move Right
       Rectangle {
-        height: Style.space(20)
-        width: Style.space(20)
+        height: Style.space(22)
+        width: Style.space(22)
         radius: Style.space(4)
         color: Util.alpha(Color.menu.text, 0.1)
 
@@ -178,8 +180,8 @@ Rectangle {
 
       // Toggle Done
       Rectangle {
-        height: Style.space(20)
-        width: Style.space(20)
+        height: Style.space(22)
+        width: Style.space(22)
         radius: Style.space(4)
         color: root.isDone ? Util.alpha("#10b981", 0.3) : Util.alpha(Color.menu.text, 0.1)
 
@@ -188,6 +190,7 @@ Rectangle {
           text: "✓"
           color: root.isDone ? "#10b981" : Color.menu.text
           font.pixelSize: Style.font.caption
+          font.bold: true
         }
 
         MouseArea {
@@ -203,14 +206,14 @@ Rectangle {
       }
 
       Item {
-        width: Math.max(0, parent.width - Style.space(80))
+        width: Math.max(0, parent.width - Style.space(90))
         height: 1
       }
 
       // Delete
       Rectangle {
-        height: Style.space(20)
-        width: Style.space(20)
+        height: Style.space(22)
+        width: Style.space(22)
         radius: Style.space(4)
         color: Util.alpha(Color.urgent, 0.15)
 
