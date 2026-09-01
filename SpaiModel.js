@@ -180,10 +180,28 @@ function moveStatus(items, id, targetStatus) {
   if (!valid.includes(targetStatus)) return items;
 
   let type = "Todo";
-  if (targetStatus === "note") type = "Note";
-  else if (targetStatus === "idea") type = "Idea";
+  let symbol = ".";
+  if (targetStatus === "note") {
+    type = "Note";
+    symbol = "-";
+  } else if (targetStatus === "idea") {
+    type = "Idea";
+    symbol = "?";
+  } else if (targetStatus === "working") {
+    symbol = "/";
+  } else if (targetStatus === "waiting") {
+    symbol = "/.";
+  } else if (targetStatus === "done") {
+    symbol = "x";
+  } else if (targetStatus === "cancelled") {
+    symbol = "z";
+  }
 
-  return updateItem(items, id, { status: targetStatus, type: type });
+  return updateItem(items, id, {
+    status: targetStatus,
+    type: type,
+    symbol: symbol,
+  });
 }
 
 function cycleStatus(items, id, direction) {

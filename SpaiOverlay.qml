@@ -118,6 +118,31 @@ Item {
     root.allItems = SpaiModel.moveStatus(root.allItems, id, targetStatus)
     root.saveData()
 
+    if (targetStatus === "note") {
+      root.viewMode = "notes"
+      var notes = root.getFilteredList("Note", "note")
+      var nIdx = 0
+      for (var ni = 0; ni < notes.length; ni++) {
+        if (notes[ni].id === id) { nIdx = ni; break; }
+      }
+      root.focusArea = "board"
+      root.selectedCardIndex = nIdx
+      return
+    }
+
+    if (targetStatus === "idea") {
+      root.viewMode = "ideas"
+      var ideas = root.getFilteredList("Idea", "idea")
+      var iIdx = 0
+      for (var ii = 0; ii < ideas.length; ii++) {
+        if (ideas[ii].id === id) { iIdx = ii; break; }
+      }
+      root.focusArea = "board"
+      root.selectedCardIndex = iIdx
+      return
+    }
+
+    root.viewMode = "kanban"
     var statuses = ["todo", "working", "waiting", "done", "cancelled"]
     var targetColIdx = statuses.indexOf(targetStatus)
     if (targetColIdx !== -1) {
@@ -133,6 +158,19 @@ Item {
       root.focusArea = "board"
       root.selectedCardIndex = newIdx
     }
+  }
+
+  function getCurrentItem() {
+    if (root.viewMode === "kanban") {
+      return root.getSelectedTask()
+    } else if (root.viewMode === "notes") {
+      var nList = root.getFilteredList("Note", "note")
+      return nList[root.selectedCardIndex] || nList[0] || null
+    } else if (root.viewMode === "ideas") {
+      var iList = root.getFilteredList("Idea", "idea")
+      return iList[root.selectedCardIndex] || iList[0] || null
+    }
+    return null
   }
 
   function cycleItemStatus(id, direction) {
@@ -1117,91 +1155,62 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_1 || event.text === "1" || event.key === Qt.Key_Plus) {
-              if (root.viewMode === "kanban") {
-                var t1 = root.getSelectedTask()
-                if (t1) root.updateStatusAndFollow(t1.id, "todo")
-                else root.activeColumnIndex = 0
-              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-                var lType1 = root.viewMode === "notes" ? "Note" : "Idea"
-                var lSt1 = root.viewMode === "notes" ? "note" : "idea"
-                var list1 = root.getFilteredList(lType1, lSt1)
-                var it1 = list1[root.selectedCardIndex] || list1[0]
-                if (it1) {
-                  root.updateStatusAndFollow(it1.id, "todo")
-                  root.viewMode = "kanban"
-                }
+            } else if (event.key === Qt.Key_1 || event.text === "1" || event.text === "." || event.key === Qt.Key_Plus || event.key === Qt.Key_T || event.text === "t" || event.text === "T") {
+              var it1 = root.getCurrentItem()
+              if (it1) {
+                root.updateStatusAndFollow(it1.id, "todo")
+              } else if (root.viewMode === "kanban") {
+                root.activeColumnIndex = 0
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_2 || event.text === "2" || event.key === Qt.Key_Eacute) {
-              if (root.viewMode === "kanban") {
-                var t2 = root.getSelectedTask()
-                if (t2) root.updateStatusAndFollow(t2.id, "working")
-                else root.activeColumnIndex = 1
-              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-                var lType2 = root.viewMode === "notes" ? "Note" : "Idea"
-                var lSt2 = root.viewMode === "notes" ? "note" : "idea"
-                var list2 = root.getFilteredList(lType2, lSt2)
-                var it2 = list2[root.selectedCardIndex] || list2[0]
-                if (it2) {
-                  root.updateStatusAndFollow(it2.id, "working")
-                  root.viewMode = "kanban"
-                }
+            } else if (event.key === Qt.Key_2 || event.text === "2" || event.text === "/" || event.key === Qt.Key_Slash || event.key === Qt.Key_Eacute || event.key === Qt.Key_W || event.text === "w" || event.text === "W") {
+              var it2 = root.getCurrentItem()
+              if (it2) {
+                root.updateStatusAndFollow(it2.id, "working")
+              } else if (root.viewMode === "kanban") {
+                root.activeColumnIndex = 1
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_3 || event.text === "3" || event.key === Qt.Key_Scaron) {
-              if (root.viewMode === "kanban") {
-                var t3 = root.getSelectedTask()
-                if (t3) root.updateStatusAndFollow(t3.id, "waiting")
-                else root.activeColumnIndex = 2
-              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-                var lType3 = root.viewMode === "notes" ? "Note" : "Idea"
-                var lSt3 = root.viewMode === "notes" ? "note" : "idea"
-                var list3 = root.getFilteredList(lType3, lSt3)
-                var it3 = list3[root.selectedCardIndex] || list3[0]
-                if (it3) {
-                  root.updateStatusAndFollow(it3.id, "waiting")
-                  root.viewMode = "kanban"
-                }
+            } else if (event.key === Qt.Key_3 || event.text === "3" || event.key === Qt.Key_Scaron || event.key === Qt.Key_P || event.text === "p" || event.text === "P") {
+              var it3 = root.getCurrentItem()
+              if (it3) {
+                root.updateStatusAndFollow(it3.id, "waiting")
+              } else if (root.viewMode === "kanban") {
+                root.activeColumnIndex = 2
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_4 || event.text === "4" || event.key === Qt.Key_Ccaron) {
-              if (root.viewMode === "kanban") {
-                var t4 = root.getSelectedTask()
-                if (t4) root.updateStatusAndFollow(t4.id, "done")
-                else root.activeColumnIndex = 3
-              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-                var lType4 = root.viewMode === "notes" ? "Note" : "Idea"
-                var lSt4 = root.viewMode === "notes" ? "note" : "idea"
-                var list4 = root.getFilteredList(lType4, lSt4)
-                var it4 = list4[root.selectedCardIndex] || list4[0]
-                if (it4) {
-                  root.updateStatusAndFollow(it4.id, "done")
-                  root.viewMode = "kanban"
-                }
+            } else if (event.key === Qt.Key_4 || event.text === "4" || event.text === "x" || event.text === "X" || event.key === Qt.Key_Ccaron || event.key === Qt.Key_D || event.text === "d" || event.text === "D" || event.key === Qt.Key_X) {
+              var it4 = root.getCurrentItem()
+              if (it4) {
+                var nextSt4 = (it4.status === "done" && root.viewMode === "kanban") ? "todo" : "done"
+                root.updateStatusAndFollow(it4.id, nextSt4)
+              } else if (root.viewMode === "kanban") {
+                root.activeColumnIndex = 3
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_5 || event.text === "5" || event.key === Qt.Key_Rcaron) {
-              if (root.viewMode === "kanban") {
-                var t5 = root.getSelectedTask()
-                if (t5) root.updateStatusAndFollow(t5.id, "cancelled")
-                else root.activeColumnIndex = 4
-              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-                var lType5 = root.viewMode === "notes" ? "Note" : "Idea"
-                var lSt5 = root.viewMode === "notes" ? "note" : "idea"
-                var list5 = root.getFilteredList(lType5, lSt5)
-                var it5 = list5[root.selectedCardIndex] || list5[0]
-                if (it5) {
-                  root.updateStatusAndFollow(it5.id, "cancelled")
-                  root.viewMode = "kanban"
-                }
+            } else if (event.key === Qt.Key_5 || event.text === "5" || event.text === "z" || event.text === "Z" || event.key === Qt.Key_Rcaron || event.key === Qt.Key_C || event.text === "c" || event.text === "C" || event.key === Qt.Key_Z) {
+              var it5 = root.getCurrentItem()
+              if (it5) {
+                root.updateStatusAndFollow(it5.id, "cancelled")
+              } else if (root.viewMode === "kanban") {
+                root.activeColumnIndex = 4
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_6 || event.text === "6" || event.key === Qt.Key_Zcaron) {
-              root.viewMode = "notes"
+            } else if (event.key === Qt.Key_6 || event.text === "6" || event.text === "-" || event.key === Qt.Key_Minus || event.key === Qt.Key_Zcaron) {
+              var it6 = root.getCurrentItem()
+              if (it6 && root.viewMode !== "notes") {
+                root.updateStatusAndFollow(it6.id, "note")
+              } else {
+                root.viewMode = "notes"
+              }
               event.accepted = true
-            } else if (event.key === Qt.Key_7 || event.text === "7" || event.key === Qt.Key_Yacute) {
-              root.viewMode = "ideas"
+            } else if (event.key === Qt.Key_7 || event.text === "7" || event.text === "?" || event.key === Qt.Key_Question || event.key === Qt.Key_Yacute) {
+              var it7 = root.getCurrentItem()
+              if (it7 && root.viewMode !== "ideas") {
+                root.updateStatusAndFollow(it7.id, "idea")
+              } else {
+                root.viewMode = "ideas"
+              }
               event.accepted = true
             } else if (event.key === Qt.Key_Tab) {
               if (root.viewMode === "kanban") {
@@ -1870,7 +1879,7 @@ Item {
                     Text {
                       id: k6Text
                       anchors.centerIn: parent
-                      text: "[6] Notes"
+                      text: "[6/-] Note"
                       color: "#04d1f9"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -1889,7 +1898,7 @@ Item {
                     Text {
                       id: k7Text
                       anchors.centerIn: parent
-                      text: "[7] Ideas"
+                      text: "[7/?] Idea"
                       color: "#ec4899"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -1997,19 +2006,19 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Style.space(6)
 
-                    // Convert to Todo (Space)
+                    // Convert to Todo (1 / Space)
                     Rectangle {
                       height: Style.space(22)
-                      width: nTodoText.implicitWidth + Style.space(12)
+                      width: nTodoText.implicitWidth + Style.space(10)
                       radius: Style.space(4)
-                      color: Util.alpha("#f94dff", 0.18)
-                      border.color: Util.alpha("#f94dff", 0.4)
+                      color: Util.alpha("#f94dff", 0.16)
+                      border.color: Util.alpha("#f94dff", 0.35)
                       border.width: 1
 
                       Text {
                         id: nTodoText
                         anchors.centerIn: parent
-                        text: "Space ➔ Todo"
+                        text: "[1] → Todo"
                         color: "#f94dff"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -2021,24 +2030,23 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                           root.updateStatusAndFollow(modelData.id, "todo")
-                          root.viewMode = "kanban"
                         }
                       }
                     }
 
-                    // Convert to Working
+                    // Convert to Working (2)
                     Rectangle {
                       height: Style.space(22)
                       width: nWorkText.implicitWidth + Style.space(10)
                       radius: Style.space(4)
-                      color: Util.alpha("#f1fc79", 0.15)
-                      border.color: Util.alpha("#f1fc79", 0.3)
+                      color: Util.alpha("#f1fc79", 0.16)
+                      border.color: Util.alpha("#f1fc79", 0.35)
                       border.width: 1
 
                       Text {
                         id: nWorkText
                         anchors.centerIn: parent
-                        text: "→ Work"
+                        text: "[2] → Work"
                         color: "#f1fc79"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -2050,7 +2058,34 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                           root.updateStatusAndFollow(modelData.id, "working")
-                          root.viewMode = "kanban"
+                        }
+                      }
+                    }
+
+                    // Convert to Idea (7 / ?)
+                    Rectangle {
+                      height: Style.space(22)
+                      width: nIdeaText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#ec4899", 0.16)
+                      border.color: Util.alpha("#ec4899", 0.35)
+                      border.width: 1
+
+                      Text {
+                        id: nIdeaText
+                        anchors.centerIn: parent
+                        text: "[7] → Idea"
+                        color: "#ec4899"
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.updateStatusAndFollow(modelData.id, "idea")
                         }
                       }
                     }
@@ -2196,19 +2231,19 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Style.space(6)
 
-                    // Convert to Todo (Space)
+                    // Convert to Todo (1 / Space)
                     Rectangle {
                       height: Style.space(22)
-                      width: iTodoText.implicitWidth + Style.space(12)
+                      width: iTodoText.implicitWidth + Style.space(10)
                       radius: Style.space(4)
-                      color: Util.alpha("#f94dff", 0.18)
-                      border.color: Util.alpha("#f94dff", 0.4)
+                      color: Util.alpha("#f94dff", 0.16)
+                      border.color: Util.alpha("#f94dff", 0.35)
                       border.width: 1
 
                       Text {
                         id: iTodoText
                         anchors.centerIn: parent
-                        text: "Space ➔ Todo"
+                        text: "[1] → Todo"
                         color: "#f94dff"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -2220,24 +2255,23 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                           root.updateStatusAndFollow(modelData.id, "todo")
-                          root.viewMode = "kanban"
                         }
                       }
                     }
 
-                    // Convert to Working
+                    // Convert to Working (2)
                     Rectangle {
                       height: Style.space(22)
                       width: iWorkText.implicitWidth + Style.space(10)
                       radius: Style.space(4)
-                      color: Util.alpha("#f1fc79", 0.15)
-                      border.color: Util.alpha("#f1fc79", 0.3)
+                      color: Util.alpha("#f1fc79", 0.16)
+                      border.color: Util.alpha("#f1fc79", 0.35)
                       border.width: 1
 
                       Text {
                         id: iWorkText
                         anchors.centerIn: parent
-                        text: "→ Work"
+                        text: "[2] → Work"
                         color: "#f1fc79"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -2249,7 +2283,34 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                           root.updateStatusAndFollow(modelData.id, "working")
-                          root.viewMode = "kanban"
+                        }
+                      }
+                    }
+
+                    // Convert to Note (6 / -)
+                    Rectangle {
+                      height: Style.space(22)
+                      width: iNoteText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#04d1f9", 0.16)
+                      border.color: Util.alpha("#04d1f9", 0.35)
+                      border.width: 1
+
+                      Text {
+                        id: iNoteText
+                        anchors.centerIn: parent
+                        text: "[6] → Note"
+                        color: "#04d1f9"
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.updateStatusAndFollow(modelData.id, "note")
                         }
                       }
                     }
