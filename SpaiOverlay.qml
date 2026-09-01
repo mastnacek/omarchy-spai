@@ -68,6 +68,8 @@ Item {
     Qt.callLater(function() {
       if (root.viewMode === "capture") {
         captureInput.text = ""
+        captureInput.prevLength = 0
+        captureInput.isDeleting = false
         captureInput.forceActiveFocus()
       } else {
         keyCatcher.forceActiveFocus()
@@ -490,31 +492,36 @@ Item {
                   return
                 }
 
-                // 1. Single character prefix at start of empty input
-                if (t === "." || t === "?" || t === "-" || t === "x" || t === "X" || t === "z" || t === "Z") {
-                  captureInput.text = t + " "
-                  captureInput.cursorPosition = 2
-                  captureInput.prevLength = 2
-                } else if (t === "/." || t === "/. ") {
+                // If user types '.' while having '/ ': transform to '/. '
+                if (t === "/ ." || t === "/." || t === "/. ") {
                   captureInput.text = "/. "
                   captureInput.cursorPosition = 3
                   captureInput.prevLength = 3
-                } else if (t.length === 2 && t.indexOf("/") === 0 && t.charAt(1) !== "." && t.charAt(1) !== " ") {
-                  captureInput.text = "/ " + t.slice(1)
-                  captureInput.cursorPosition = 3
-                  captureInput.prevLength = captureInput.text.length
+                  return
                 }
-                // 2. Priority modifier `!`
-                else if (t === "!" || t.endsWith(" !")) {
+
+                // Single character prefix: '.', '/', '?', '-', 'x', 'X', 'z', 'Z', '!'
+                if (t === "." || t === "/" || t === "?" || t === "-" || t === "x" || t === "X" || t === "z" || t === "Z" || t === "!") {
+                  captureInput.text = t + " "
+                  captureInput.cursorPosition = 2
+                  captureInput.prevLength = 2
+                  return
+                }
+
+                // Priority modifier " !" in existing text: e.g. "task !" -> "task ! "
+                if (t.endsWith(" !")) {
                   captureInput.text = t + " "
                   captureInput.cursorPosition = captureInput.text.length
                   captureInput.prevLength = captureInput.text.length
+                  return
                 }
-                // 3. Completed tag `:tag:`
-                else if (/(?:^|\s):[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)*:$/.test(t)) {
+
+                // Completed tag ":tag:" in existing text: e.g. "task :work:" -> "task :work: "
+                if (/(?:^|\s):[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)*:$/.test(t)) {
                   captureInput.text = t + " "
                   captureInput.cursorPosition = captureInput.text.length
                   captureInput.prevLength = captureInput.text.length
+                  return
                 }
               }
 
