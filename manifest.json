@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "jara.spai",
+  "name": "SPAI Tasks & Kanban",
+  "version": "1.0.0",
+  "author": "Jara",
+  "license": "MIT",
+  "description": "Task management with Kanban board, quick capture shortcut, notes, ideas, and priority/tag tracking based on SPAI syntax.",
+  "homepage": "https://github.com/mastnacek/omarchy-spai",
+  "repository": "https://github.com/mastnacek/omarchy-spai",
+  "keywords": [
+    "spai",
+    "kanban",
+    "tasks",
+    "notes",
+    "ideas",
+    "productivity",
+    "todo"
+  ],
+  "kinds": [
+    "bar-widget",
+    "overlay"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "barWidget": "BarWidget.qml",
+    "overlay": "SpaiOverlay.qml"
+  },
+  "barWidget": {
+    "displayName": "SPAI",
+    "description": "SPAI task manager, status counters, and quick capture",
+    "category": "Productivity",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

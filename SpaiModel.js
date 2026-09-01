@@ -1,0 +1,231 @@
+// SpaiModel.js - Core SPAI Logic for Omarchy Plugin
+
+export const SPAI_PREFIXES = [
+  { prefix: "/. ", marker: "/.", type: "Todo", status: "waiting" },
+  { prefix: ". ", marker: ".", type: "Todo", status: "todo" },
+  { prefix: "/ ", marker: "/", type: "Todo", status: "working" },
+  { prefix: "x ", marker: "x", type: "Todo", status: "done" },
+  { prefix: "X ", marker: "X", type: "Todo", status: "done" },
+  { prefix: "z ", marker: "z", type: "Todo", status: "cancelled" },
+  { prefix: "Z ", marker: "Z", type: "Todo", status: "cancelled" },
+  { prefix: "- ", marker: "-", type: "Note", status: "note" },
+  { prefix: "? ", marker: "?", type: "Idea", status: "idea" },
+];
+
+export function generateId() {
+  return `spai_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+export function parseRawItem(rawText) {
+  const text = (rawText || "").trim();
+  if (!text) return null;
+
+  let type = "Todo";
+  let status = "todo";
+  let symbol = ".";
+  let content = text;
+
+  for (let i = 0; i < SPAI_PREFIXES.length; i++) {
+    const def = SPAI_PREFIXES[i];
+    if (text.startsWith(def.prefix)) {
+      type = def.type;
+      status = def.status;
+      symbol = def.marker;
+      content = text.slice(def.prefix.length).trim();
+      break;
+    }
+  }
+
+  // Extract Priority `!`
+  let priority = "normal";
+  const prioMatch = /(?:^|\s)!(?:\s|$)/;
+  if (prioMatch.test(content)) {
+    priority = "high";
+    content = content.replace(prioMatch, " ").trim();
+  }
+
+  // Extract Deadline `@YYYY-MM-DD` or `@DD.MM.`
+  let deadline = "";
+  const deadlineRe =
+    /(?:^|\s)@(?:(\d{4}-\d{2}-\d{2})|(\d{1,2}\.\d{1,2}\.(?:\d{4})?))(?:\s|$)/;
+  const deadMatch = content.match(deadlineRe);
+  if (deadMatch) {
+    if (deadMatch[1]) {
+      deadline = deadMatch[1];
+    } else if (deadMatch[2]) {
+      const parts = deadMatch[2].split(".").filter(Boolean);
+      const day = (parts[0] || "").padStart(2, "0");
+      const month = (parts[1] || "").padStart(2, "0");
+      const year = parts[2] || new Date().getFullYear().toString();
+      deadline = `${year}-${month}-${day}`;
+    }
+    content = content.replace(deadlineRe, " ").trim();
+  }
+
+  // Extract Tags `:tag1:tag2:`
+  const tags = [];
+  const tagBlockRe =
+    /(?:^|\s):([A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)*):(?:\s|$)/g;
+  content = content
+    .replace(tagBlockRe, (_m, tagChain) => {
+      const split = tagChain.split(":").filter(Boolean);
+      for (let k = 0; k < split.length; k++) {
+        const t = split[k].toLowerCase();
+        if (!tags.includes(t)) tags.push(t);
+      }
+      return " ";
+    })
+    .trim();
+
+  return {
+    id: generateId(),
+    raw: rawText,
+    type: type,
+    status: status,
+    symbol: symbol,
+    title: content || text,
+    priority: priority,
+    deadline: deadline,
+    tags: tags,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function parseItems(jsonString) {
+  if (!jsonString) return [];
+  try {
+    const data = JSON.parse(jsonString);
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.items)) return data.items;
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export function formatItems(items) {
+  return JSON.stringify(
+    {
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      items: items || [],
+    },
+    null,
+    2,
+  );
+}
+
+export function addItem(items, rawOrItem) {
+  const list = (items || []).slice();
+  const item =
+    typeof rawOrItem === "string" ? parseRawItem(rawOrItem) : rawOrItem;
+  if (!item) return list;
+  list.unshift(item);
+  return list;
+}
+
+export function updateItem(items, id, updates) {
+  const list = (items || []).slice();
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].id === id) {
+      const old = list[i];
+      const merged = Object.assign({}, old, updates, {
+        updatedAt: new Date().toISOString(),
+      });
+      list[i] = merged;
+      break;
+    }
+  }
+  return list;
+}
+
+export function removeItem(items, id) {
+  return (items || []).filter((it) => it.id !== id);
+}
+
+export function moveStatus(items, id, targetStatus) {
+  const valid = [
+    "todo",
+    "working",
+    "waiting",
+    "done",
+    "cancelled",
+    "note",
+    "idea",
+  ];
+  if (!valid.includes(targetStatus)) return items;
+
+  let type = "Todo";
+  if (targetStatus === "note") type = "Note";
+  else if (targetStatus === "idea") type = "Idea";
+
+  return updateItem(items, id, { status: targetStatus, type: type });
+}
+
+export function cycleStatus(items, id, direction) {
+  const statuses = ["todo", "working", "waiting", "done"];
+  const list = items || [];
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].id === id) {
+      const current = list[i].status;
+      let idx = statuses.indexOf(current);
+      if (idx === -1) idx = 0;
+      const nextIdx = (idx + direction + statuses.length) % statuses.length;
+      return moveStatus(list, id, statuses[nextIdx]);
+    }
+  }
+  return list;
+}
+
+export function filterItems(items, filterText, typeFilter, statusFilter) {
+  const list = items || [];
+  const q = (filterText || "").toLowerCase().trim();
+
+  return list.filter((it) => {
+    if (typeFilter && it.type !== typeFilter) return false;
+    if (statusFilter && it.status !== statusFilter) return false;
+
+    if (!q) return true;
+
+    if (it.title && it.title.toLowerCase().includes(q)) return true;
+    if (it.deadline && it.deadline.includes(q)) return true;
+    if (it.tags && it.tags.some((t) => t.includes(q))) return true;
+
+    return false;
+  });
+}
+
+export function getStats(items) {
+  const list = items || [];
+  const stats = {
+    total: list.length,
+    todo: 0,
+    working: 0,
+    waiting: 0,
+    done: 0,
+    notes: 0,
+    ideas: 0,
+    pendingTotal: 0,
+  };
+
+  for (let i = 0; i < list.length; i++) {
+    const it = list[i];
+    if (it.type === "Todo") {
+      if (it.status === "todo") stats.todo++;
+      else if (it.status === "working") stats.working++;
+      else if (it.status === "waiting") stats.waiting++;
+      else if (it.status === "done") stats.done++;
+
+      if (it.status !== "done" && it.status !== "cancelled") {
+        stats.pendingTotal++;
+      }
+    } else if (it.type === "Note") {
+      stats.notes++;
+    } else if (it.type === "Idea") {
+      stats.ideas++;
+    }
+  }
+
+  return stats;
+}
