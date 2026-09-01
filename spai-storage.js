@@ -35,7 +35,7 @@ function slugify(text) {
 function formatDateTime(dateInput) {
   const pad = (n) => n.toString().padStart(2, '0');
   const d = dateInput ? new Date(dateInput) : new Date();
-  if (isNaN(d.getTime())) return formatDateTime(new Date());
+  if (Number.isNaN(d.getTime())) return formatDateTime(new Date());
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
@@ -202,7 +202,7 @@ function getNextId(records) {
     const match = (r.id || '').match(/^SPAI-(\d+)$/i);
     if (match) {
       const num = parseInt(match[1], 10);
-      if (!isNaN(num) && num > maxNum) maxNum = num;
+      if (!Number.isNaN(num) && num > maxNum) maxNum = num;
     }
   }
   return `SPAI-${(maxNum + 1).toString().padStart(3, '0')}`;
@@ -234,7 +234,8 @@ function syncItem(item) {
   const slug = slugify(item.title) || 'item';
   const fileName = `${datePrefix}-${item.id}-${slug}.md`;
   const targetDir = getSubdirForType(item.type);
-  const targetFilePath = path.join(targetDir, fileName);
+  const safeFileName = path.basename(fileName);
+  const targetFilePath = path.join(targetDir, safeFileName);
 
   // Find existing file on disk across all subdirs to move or update
   let existingPath = null;
