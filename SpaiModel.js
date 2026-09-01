@@ -36,6 +36,25 @@ function parseRawItem(rawText) {
       symbol = def.marker;
       content = text.slice(def.prefix.length).trim();
       break;
+    } else if (text === def.marker) {
+      type = def.type;
+      status = def.status;
+      symbol = def.marker;
+      content = "";
+      break;
+    } else if (text.startsWith(`${def.marker} `)) {
+      type = def.type;
+      status = def.status;
+      symbol = def.marker;
+      content = text.slice(def.marker.length + 1).trim();
+      break;
+    } else if (text.startsWith(def.marker)) {
+      if (def.marker === "/" && text.startsWith("/.")) continue;
+      type = def.type;
+      status = def.status;
+      symbol = def.marker;
+      content = text.slice(def.marker.length).trim();
+      break;
     }
   }
 

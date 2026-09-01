@@ -356,8 +356,20 @@ Item {
           height: Style.space(48)
           radius: root.cornerRadius
           color: Util.alpha(root.foreground, 0.05)
-          border.color: captureInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.3)
-          border.width: captureInput.activeFocus ? Style.space(2) : Style.normalBorderWidth
+          border.color: {
+            if (captureModal.detected) {
+              var st = captureModal.detected.status
+              if (st === "todo") return "#38bdf8"
+              if (st === "working") return "#f59e0b"
+              if (st === "waiting") return "#a855f7"
+              if (st === "done") return "#10b981"
+              if (st === "cancelled") return "#94a3b8"
+              if (st === "idea") return "#ec4899"
+              return root.foreground
+            }
+            return captureInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.3)
+          }
+          border.width: captureInput.activeFocus || captureModal.detected ? Style.space(2) : Style.normalBorderWidth
 
           Row {
             anchors.fill: parent
@@ -836,7 +848,7 @@ Item {
                 id: m3Text
                 anchors.centerIn: parent
                 text: ":tag:"
-                color: isCurrent ? Color.accent : root.foreground
+                color: parent.isCurrent ? Color.accent : root.foreground
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
               }
