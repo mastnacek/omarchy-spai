@@ -123,6 +123,7 @@ function parseItems(jsonString) {
     const data = JSON.parse(jsonString);
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.items)) return data.items;
+    if (data && Array.isArray(data.records)) return data.records;
     return [];
   } catch (err) {
     void err;

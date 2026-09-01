@@ -9,7 +9,7 @@ BarWidget {
   id: root
   moduleName: "jara.spai"
 
-  property string spaiDataPath: Quickshell.env("HOME") + "/.local/share/spai/tasks.json"
+  property string spaiDataPath: Quickshell.env("HOME") + "/Documents/spai/.index.json"
   property var rawItems: []
   property var stats: ({ total: 0, todo: 0, working: 0, waiting: 0, done: 0, cancelled: 0, notes: 0, ideas: 0, pendingTotal: 0 })
 

@@ -11,8 +11,9 @@ Item {
   id: root
 
   property string omarchyPath: Quickshell.env("OMARCHY_PATH")
-  property string spaiDataDir: Quickshell.env("HOME") + "/.local/share/spai"
-  property string spaiDataPath: spaiDataDir + "/tasks.json"
+  property string spaiDataDir: Quickshell.env("HOME") + "/Documents/spai"
+  property string spaiDataPath: spaiDataDir + "/.index.json"
+  property string pluginDir: Quickshell.env("HOME") + "/.config/omarchy/plugins/jara.spai"
 
   property bool opened: false
   property string viewMode: "kanban" // "kanban", "capture", "notes", "ideas"
@@ -106,20 +107,44 @@ Item {
     dataFile.reload()
   }
 
+  function syncStorageItem(item) {
+    if (!item) return
+    Quickshell.execDetached(["node", root.pluginDir + "/spai-storage.js", "sync", JSON.stringify(item)])
+  }
+
+  function syncStorageDelete(id) {
+    if (!id) return
+    Quickshell.execDetached(["node", root.pluginDir + "/spai-storage.js", "delete", String(id)])
+  }
+
   function addNewItem(rawText) {
     if (!rawText || !rawText.trim()) return
-    root.allItems = SpaiModel.addItem(root.allItems, rawText.trim())
+    var item = SpaiModel.parseRawItem(rawText.trim())
+    if (!item) return
+    root.allItems = SpaiModel.addItem(root.allItems, item)
     root.saveData()
+    root.syncStorageItem(item)
   }
 
   function updateStatus(id, targetStatus) {
     root.allItems = SpaiModel.moveStatus(root.allItems, id, targetStatus)
     root.saveData()
+    var updated = null
+    for (var i = 0; i < root.allItems.length; i++) {
+      if (root.allItems[i].id === id) { updated = root.allItems[i]; break; }
+    }
+    if (updated) root.syncStorageItem(updated)
   }
 
   function updateStatusAndFollow(id, targetStatus) {
     root.allItems = SpaiModel.moveStatus(root.allItems, id, targetStatus)
     root.saveData()
+
+    var updatedItem = null
+    for (var i = 0; i < root.allItems.length; i++) {
+      if (root.allItems[i].id === id) { updatedItem = root.allItems[i]; break; }
+    }
+    if (updatedItem) root.syncStorageItem(updatedItem)
 
     if (targetStatus === "note") {
       root.viewMode = "notes"
@@ -152,9 +177,9 @@ Item {
       root.activeColumnIndex = targetColIdx
       var targetTasks = root.getFilteredList("Todo", targetStatus)
       var newIdx = 0
-      for (var i = 0; i < targetTasks.length; i++) {
-        if (targetTasks[i].id === id) {
-          newIdx = i
+      for (var ti = 0; ti < targetTasks.length; ti++) {
+        if (targetTasks[ti].id === id) {
+          newIdx = ti
           break
         }
       }
@@ -179,6 +204,11 @@ Item {
   function cycleItemStatus(id, direction) {
     root.allItems = SpaiModel.cycleStatus(root.allItems, id, direction)
     root.saveData()
+    var updated = null
+    for (var i = 0; i < root.allItems.length; i++) {
+      if (root.allItems[i].id === id) { updated = root.allItems[i]; break; }
+    }
+    if (updated) root.syncStorageItem(updated)
   }
 
   function cycleItemStatusAndFollow(id, direction) {
@@ -210,6 +240,7 @@ Item {
     }
     if (found) {
       root.deletedUndoStack.push({ item: found, viewMode: root.viewMode, status: found.status })
+      root.syncStorageDelete(id)
     }
     root.allItems = SpaiModel.removeItem(root.allItems, id)
     root.saveData()
@@ -221,6 +252,7 @@ Item {
     if (last && last.item) {
       root.allItems = SpaiModel.addItem(root.allItems, last.item)
       root.saveData()
+      root.syncStorageItem(last.item)
       if (last.item.type === "Note") {
         root.viewMode = "notes"
       } else if (last.item.type === "Idea") {
@@ -295,7 +327,7 @@ Item {
 
   Process {
     id: initProc
-    command: ["mkdir", "-p", root.spaiDataDir]
+    command: ["node", root.pluginDir + "/spai-storage.js", "rebuild"]
   }
 
   FileView {
