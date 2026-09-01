@@ -16,6 +16,7 @@ Item {
 
   property bool opened: false
   property string viewMode: "kanban" // "kanban", "capture", "notes", "ideas"
+  property string focusArea: "board" // "tabs", "board"
   property string filterText: ""
   property int activeColumnIndex: 0  // 0: todo, 1: working, 2: waiting, 3: done, 4: cancelled
   property int selectedCardIndex: 0
@@ -45,6 +46,7 @@ Item {
     ensureDataDir()
     root.opened = true
     root.filterText = ""
+    root.focusArea = "board"
     root.selectedCardIndex = 0
 
     var payload = {}
@@ -128,6 +130,7 @@ Item {
           break
         }
       }
+      root.focusArea = "board"
       root.selectedCardIndex = newIdx
     }
   }
@@ -172,6 +175,7 @@ Item {
   }
 
   function getSelectedTask() {
+    if (root.focusArea !== "board") return null
     var list = root.getActiveColumnTasks()
     if (list.length === 0) return null
     var idx = Math.max(0, Math.min(root.selectedCardIndex, list.length - 1))
@@ -294,7 +298,7 @@ Item {
 
             Text {
               text: "SPAI Quick Capture"
-              color: root.foreground
+              color: "#f8fafc"
               font.family: root.fontFamily
               font.pixelSize: Style.font.heading
               font.bold: true
@@ -320,7 +324,7 @@ Item {
                 id: escKeyText
                 anchors.centerIn: parent
                 text: "Esc Cancel"
-                color: Color.muted
+                color: "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
               }
@@ -378,7 +382,7 @@ Item {
               id: captureInput
               width: parent.width
               height: parent.height
-              color: root.foreground
+              color: "#ffffff"
               font.family: root.fontFamily
               font.pixelSize: Style.font.title
               verticalAlignment: TextInput.AlignVCenter
@@ -401,8 +405,8 @@ Item {
               Text {
                 visible: !captureInput.text
                 text: "Type . todo, / work, /. wait, ? idea, - note, ! urgent, @date, :tag:..."
-                color: Color.muted
-                opacity: 0.55
+                color: "#64748b"
+                opacity: 0.8
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.title
                 anchors.fill: parent
@@ -430,7 +434,7 @@ Item {
 
             Text {
               text: "Detected:"
-              color: Color.muted
+              color: "#94a3b8"
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
               anchors.verticalCenter: parent.verticalCenter
@@ -482,7 +486,7 @@ Item {
                   return st.toUpperCase()
                 }
                 color: {
-                  if (!captureModal.detected) return root.foreground
+                  if (!captureModal.detected) return "#ffffff"
                   var st = captureModal.detected.status
                   if (st === "todo") return "#f94dff"
                   if (st === "working") return "#f1fc79"
@@ -525,21 +529,22 @@ Item {
               height: Style.space(20)
               width: detDeadText.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: Util.alpha(Color.accent, 0.15)
-              border.color: Util.alpha(Color.accent, 0.35)
+              color: Util.alpha("#04d1f9", 0.15)
+              border.color: Util.alpha("#04d1f9", 0.35)
               border.width: 1
               anchors.verticalCenter: parent.verticalCenter
 
               Row {
                 anchors.centerIn: parent
                 spacing: Style.space(3)
-                Text { text: "󰃰"; color: Color.accent; font.pixelSize: Style.font.caption }
+                Text { text: "󰃰"; color: "#04d1f9"; font.pixelSize: Style.font.caption }
                 Text {
                   id: detDeadText
                   text: captureModal.detected ? captureModal.detected.deadline : ""
-                  color: Color.accent
+                  color: "#04d1f9"
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.caption
+                  font.bold: true
                 }
               }
             }
@@ -547,9 +552,10 @@ Item {
             // Clean Title preview
             Text {
               text: captureModal.detected ? captureModal.detected.title : ""
-              color: root.foreground
+              color: "#ffffff"
               font.family: root.fontFamily
               font.pixelSize: Style.font.body
+              font.bold: true
               elide: Text.ElideRight
               width: parent.width - Style.space(320)
               anchors.verticalCenter: parent.verticalCenter
@@ -568,7 +574,7 @@ Item {
 
             Text {
               text: "Type:"
-              color: Color.muted
+              color: "#94a3b8"
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
               anchors.verticalCenter: parent.verticalCenter
@@ -771,7 +777,7 @@ Item {
 
             Text {
               text: "Meta:"
-              color: Color.muted
+              color: "#94a3b8"
               font.family: root.fontFamily
               font.pixelSize: Style.font.caption
               anchors.verticalCenter: parent.verticalCenter
@@ -845,7 +851,7 @@ Item {
                 id: m3Text
                 anchors.centerIn: parent
                 text: ":tag:"
-                color: parent.isCurrent ? Color.accent : root.foreground
+                color: parent.isCurrent ? Color.accent : "#cbd5e1"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
               }
@@ -879,7 +885,7 @@ Item {
               Text {
                 anchors.centerIn: parent
                 text: "Cancel"
-                color: root.foreground
+                color: "#e2e8f0"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
               }
@@ -963,180 +969,233 @@ Item {
               captureInput.forceActiveFocus()
             })
             event.accepted = true
-          } else if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
-            if (root.viewMode === "kanban") {
-              root.activeColumnIndex = (root.activeColumnIndex - 1 + 5) % 5
+          }
+          // ==========================================
+          // ARROW NAVIGATION: TABS LEVEL (when focusArea === "tabs")
+          // ==========================================
+          else if (root.focusArea === "tabs") {
+            if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+              var tabModes = ["kanban", "notes", "ideas"]
+              var curIdx = tabModes.indexOf(root.viewMode)
+              if (curIdx === -1) curIdx = 0
+              var nextIdx = (curIdx - 1 + tabModes.length) % tabModes.length
+              root.viewMode = tabModes[nextIdx]
+              event.accepted = true
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+              var tabModesR = ["kanban", "notes", "ideas"]
+              var curIdxR = tabModesR.indexOf(root.viewMode)
+              if (curIdxR === -1) curIdxR = 0
+              var nextIdxR = (curIdxR + 1) % tabModesR.length
+              root.viewMode = tabModesR[nextIdxR]
+              event.accepted = true
+            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+              root.focusArea = "board"
+              root.selectedCardIndex = 0
               root.clampSelection()
+              event.accepted = true
             }
-            event.accepted = true
-          } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
-            if (root.viewMode === "kanban") {
-              root.activeColumnIndex = (root.activeColumnIndex + 1) % 5
-              root.clampSelection()
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
-            if (root.viewMode === "kanban") {
-              if (root.selectedCardIndex > 0) root.selectedCardIndex--
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
-            if (root.viewMode === "kanban") {
-              var tasks = root.getActiveColumnTasks()
-              if (root.selectedCardIndex < tasks.length - 1) root.selectedCardIndex++
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_Space) {
-            // Cycle status loop in Kanban mode while following focus!
-            if (root.viewMode === "kanban") {
-              var curTask = root.getSelectedTask()
-              if (curTask) {
-                if (event.modifiers & Qt.ShiftModifier) {
-                  root.cycleItemStatusAndFollow(curTask.id, -1)
+          }
+          // ==========================================
+          // ARROW NAVIGATION: BOARD LEVEL (when focusArea === "board")
+          // ==========================================
+          else if (root.focusArea === "board") {
+            if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+              if (root.viewMode === "kanban") {
+                if (root.selectedCardIndex > 0) {
+                  root.selectedCardIndex--
                 } else {
-                  root.cycleItemStatusAndFollow(curTask.id, 1)
+                  // At the top card or empty column -> switch to Tabs navigation!
+                  root.focusArea = "tabs"
+                  root.selectedCardIndex = -1
+                }
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                if (root.selectedCardIndex > 0) {
+                  root.selectedCardIndex--
+                } else {
+                  root.focusArea = "tabs"
+                  root.selectedCardIndex = -1
                 }
               }
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lTypeSp = root.viewMode === "notes" ? "Note" : "Idea"
-              var lStSp = root.viewMode === "notes" ? "note" : "idea"
-              var listSp = root.getFilteredList(lTypeSp, lStSp)
-              var itSp = listSp[root.selectedCardIndex] || listSp[0]
-              if (itSp) {
-                root.updateStatusAndFollow(itSp.id, "todo")
-                root.viewMode = "kanban"
+              event.accepted = true
+            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+              if (root.viewMode === "kanban") {
+                var tasks = root.getActiveColumnTasks()
+                if (root.selectedCardIndex < tasks.length - 1) {
+                  root.selectedCardIndex++
+                }
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lTypeD = root.viewMode === "notes" ? "Note" : "Idea"
+                var lStD = root.viewMode === "notes" ? "note" : "idea"
+                var listD = root.getFilteredList(lTypeD, lStD)
+                if (root.selectedCardIndex < listD.length - 1) {
+                  root.selectedCardIndex++
+                }
               }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_X || event.key === Qt.Key_D) {
-            if (root.viewMode === "kanban") {
-              var curTaskD = root.getSelectedTask()
-              if (curTaskD) {
-                var nextSt = curTaskD.status === "done" ? "todo" : "done"
-                root.updateStatusAndFollow(curTaskD.id, nextSt)
+              event.accepted = true
+            } else if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+              if (root.viewMode === "kanban") {
+                root.activeColumnIndex = (root.activeColumnIndex - 1 + 5) % 5
+                root.clampSelection()
               }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_Z || event.key === Qt.Key_C) {
-            if (root.viewMode === "kanban") {
-              var curTaskZ = root.getSelectedTask()
-              if (curTaskZ) {
-                root.updateStatusAndFollow(curTaskZ.id, "cancelled")
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
-            if (root.viewMode === "kanban") {
-              var curTaskDel = root.getSelectedTask()
-              if (curTaskDel) {
-                root.deleteItem(curTaskDel.id)
-              }
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lTypeDel = root.viewMode === "notes" ? "Note" : "Idea"
-              var lStDel = root.viewMode === "notes" ? "note" : "idea"
-              var listDel = root.getFilteredList(lTypeDel, lStDel)
-              var itDel = listDel[root.selectedCardIndex] || listDel[0]
-              if (itDel) {
-                root.deleteItem(itDel.id)
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_1) {
-            if (root.viewMode === "kanban") {
-              var t1 = root.getSelectedTask()
-              if (t1) root.updateStatusAndFollow(t1.id, "todo")
-              else root.activeColumnIndex = 0
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lType1 = root.viewMode === "notes" ? "Note" : "Idea"
-              var lSt1 = root.viewMode === "notes" ? "note" : "idea"
-              var list1 = root.getFilteredList(lType1, lSt1)
-              var it1 = list1[root.selectedCardIndex] || list1[0]
-              if (it1) {
-                root.updateStatusAndFollow(it1.id, "todo")
-                root.viewMode = "kanban"
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_2) {
-            if (root.viewMode === "kanban") {
-              var t2 = root.getSelectedTask()
-              if (t2) root.updateStatusAndFollow(t2.id, "working")
-              else root.activeColumnIndex = 1
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lType2 = root.viewMode === "notes" ? "Note" : "Idea"
-              var lSt2 = root.viewMode === "notes" ? "note" : "idea"
-              var list2 = root.getFilteredList(lType2, lSt2)
-              var it2 = list2[root.selectedCardIndex] || list2[0]
-              if (it2) {
-                root.updateStatusAndFollow(it2.id, "working")
-                root.viewMode = "kanban"
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_3) {
-            if (root.viewMode === "kanban") {
-              var t3 = root.getSelectedTask()
-              if (t3) root.updateStatusAndFollow(t3.id, "waiting")
-              else root.activeColumnIndex = 2
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lType3 = root.viewMode === "notes" ? "Note" : "Idea"
-              var lSt3 = root.viewMode === "notes" ? "note" : "idea"
-              var list3 = root.getFilteredList(lType3, lSt3)
-              var it3 = list3[root.selectedCardIndex] || list3[0]
-              if (it3) {
-                root.updateStatusAndFollow(it3.id, "waiting")
-                root.viewMode = "kanban"
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_4) {
-            if (root.viewMode === "kanban") {
-              var t4 = root.getSelectedTask()
-              if (t4) root.updateStatusAndFollow(t4.id, "done")
-              else root.activeColumnIndex = 3
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lType4 = root.viewMode === "notes" ? "Note" : "Idea"
-              var lSt4 = root.viewMode === "notes" ? "note" : "idea"
-              var list4 = root.getFilteredList(lType4, lSt4)
-              var it4 = list4[root.selectedCardIndex] || list4[0]
-              if (it4) {
-                root.updateStatusAndFollow(it4.id, "done")
-                root.viewMode = "kanban"
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_5) {
-            if (root.viewMode === "kanban") {
-              var t5 = root.getSelectedTask()
-              if (t5) root.updateStatusAndFollow(t5.id, "cancelled")
-              else root.activeColumnIndex = 4
-            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
-              var lType5 = root.viewMode === "notes" ? "Note" : "Idea"
-              var lSt5 = root.viewMode === "notes" ? "note" : "idea"
-              var list5 = root.getFilteredList(lType5, lSt5)
-              var it5 = list5[root.selectedCardIndex] || list5[0]
-              if (it5) {
-                root.updateStatusAndFollow(it5.id, "cancelled")
-                root.viewMode = "kanban"
-              }
-            }
-            event.accepted = true
-          } else if (event.key === Qt.Key_6) {
-            root.viewMode = "notes"
-            event.accepted = true
-          } else if (event.key === Qt.Key_7) {
-            root.viewMode = "ideas"
-            event.accepted = true
-          } else if (event.key === Qt.Key_Tab) {
-            if (root.viewMode === "kanban") {
-              if (event.modifiers & Qt.ShiftModifier) {
-                root.activeColumnIndex = (root.activeColumnIndex + 4) % 5
-              } else {
+              event.accepted = true
+            } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+              if (root.viewMode === "kanban") {
                 root.activeColumnIndex = (root.activeColumnIndex + 1) % 5
+                root.clampSelection()
               }
-              root.clampSelection()
+              event.accepted = true
+            } else if (event.key === Qt.Key_Space) {
+              // Cycle status loop in Kanban mode while following focus!
+              if (root.viewMode === "kanban") {
+                var curTask = root.getSelectedTask()
+                if (curTask) {
+                  if (event.modifiers & Qt.ShiftModifier) {
+                    root.cycleItemStatusAndFollow(curTask.id, -1)
+                  } else {
+                    root.cycleItemStatusAndFollow(curTask.id, 1)
+                  }
+                }
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lTypeSp = root.viewMode === "notes" ? "Note" : "Idea"
+                var lStSp = root.viewMode === "notes" ? "note" : "idea"
+                var listSp = root.getFilteredList(lTypeSp, lStSp)
+                var itSp = listSp[root.selectedCardIndex] || listSp[0]
+                if (itSp) {
+                  root.updateStatusAndFollow(itSp.id, "todo")
+                  root.viewMode = "kanban"
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_X || event.key === Qt.Key_D) {
+              if (root.viewMode === "kanban") {
+                var curTaskD = root.getSelectedTask()
+                if (curTaskD) {
+                  var nextSt = curTaskD.status === "done" ? "todo" : "done"
+                  root.updateStatusAndFollow(curTaskD.id, nextSt)
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_Z || event.key === Qt.Key_C) {
+              if (root.viewMode === "kanban") {
+                var curTaskZ = root.getSelectedTask()
+                if (curTaskZ) {
+                  root.updateStatusAndFollow(curTaskZ.id, "cancelled")
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
+              if (root.viewMode === "kanban") {
+                var curTaskDel = root.getSelectedTask()
+                if (curTaskDel) {
+                  root.deleteItem(curTaskDel.id)
+                }
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lTypeDel = root.viewMode === "notes" ? "Note" : "Idea"
+                var lStDel = root.viewMode === "notes" ? "note" : "idea"
+                var listDel = root.getFilteredList(lTypeDel, lStDel)
+                var itDel = listDel[root.selectedCardIndex] || listDel[0]
+                if (itDel) {
+                  root.deleteItem(itDel.id)
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_1) {
+              if (root.viewMode === "kanban") {
+                var t1 = root.getSelectedTask()
+                if (t1) root.updateStatusAndFollow(t1.id, "todo")
+                else root.activeColumnIndex = 0
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lType1 = root.viewMode === "notes" ? "Note" : "Idea"
+                var lSt1 = root.viewMode === "notes" ? "note" : "idea"
+                var list1 = root.getFilteredList(lType1, lSt1)
+                var it1 = list1[root.selectedCardIndex] || list1[0]
+                if (it1) {
+                  root.updateStatusAndFollow(it1.id, "todo")
+                  root.viewMode = "kanban"
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_2) {
+              if (root.viewMode === "kanban") {
+                var t2 = root.getSelectedTask()
+                if (t2) root.updateStatusAndFollow(t2.id, "working")
+                else root.activeColumnIndex = 1
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lType2 = root.viewMode === "notes" ? "Note" : "Idea"
+                var lSt2 = root.viewMode === "notes" ? "note" : "idea"
+                var list2 = root.getFilteredList(lType2, lSt2)
+                var it2 = list2[root.selectedCardIndex] || list2[0]
+                if (it2) {
+                  root.updateStatusAndFollow(it2.id, "working")
+                  root.viewMode = "kanban"
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_3) {
+              if (root.viewMode === "kanban") {
+                var t3 = root.getSelectedTask()
+                if (t3) root.updateStatusAndFollow(t3.id, "waiting")
+                else root.activeColumnIndex = 2
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lType3 = root.viewMode === "notes" ? "Note" : "Idea"
+                var lSt3 = root.viewMode === "notes" ? "note" : "idea"
+                var list3 = root.getFilteredList(lType3, lSt3)
+                var it3 = list3[root.selectedCardIndex] || list3[0]
+                if (it3) {
+                  root.updateStatusAndFollow(it3.id, "waiting")
+                  root.viewMode = "kanban"
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_4) {
+              if (root.viewMode === "kanban") {
+                var t4 = root.getSelectedTask()
+                if (t4) root.updateStatusAndFollow(t4.id, "done")
+                else root.activeColumnIndex = 3
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lType4 = root.viewMode === "notes" ? "Note" : "Idea"
+                var lSt4 = root.viewMode === "notes" ? "note" : "idea"
+                var list4 = root.getFilteredList(lType4, lSt4)
+                var it4 = list4[root.selectedCardIndex] || list4[0]
+                if (it4) {
+                  root.updateStatusAndFollow(it4.id, "done")
+                  root.viewMode = "kanban"
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_5) {
+              if (root.viewMode === "kanban") {
+                var t5 = root.getSelectedTask()
+                if (t5) root.updateStatusAndFollow(t5.id, "cancelled")
+                else root.activeColumnIndex = 4
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lType5 = root.viewMode === "notes" ? "Note" : "Idea"
+                var lSt5 = root.viewMode === "notes" ? "note" : "idea"
+                var list5 = root.getFilteredList(lType5, lSt5)
+                var it5 = list5[root.selectedCardIndex] || list5[0]
+                if (it5) {
+                  root.updateStatusAndFollow(it5.id, "cancelled")
+                  root.viewMode = "kanban"
+                }
+              }
+              event.accepted = true
+            } else if (event.key === Qt.Key_6) {
+              root.viewMode = "notes"
+              event.accepted = true
+            } else if (event.key === Qt.Key_7) {
+              root.viewMode = "ideas"
+              event.accepted = true
+            } else if (event.key === Qt.Key_Tab) {
+              if (root.viewMode === "kanban") {
+                if (event.modifiers & Qt.ShiftModifier) {
+                  root.activeColumnIndex = (root.activeColumnIndex + 4) % 5
+                } else {
+                  root.activeColumnIndex = (root.activeColumnIndex + 1) % 5
+                }
+                root.clampSelection()
+              }
+              event.accepted = true
             }
-            event.accepted = true
           }
         }
       }
@@ -1176,7 +1235,7 @@ Item {
 
             Text {
               text: "SPAI"
-              color: root.foreground
+              color: "#ffffff"
               font.family: root.fontFamily
               font.pixelSize: Style.font.heading
               font.bold: true
@@ -1184,7 +1243,7 @@ Item {
             }
           }
 
-          // Center: Segmented Navigation Tabs
+          // Center: Segmented Navigation Tabs (with active focus border)
           Row {
             anchors.centerIn: parent
             spacing: Style.space(4)
@@ -1195,14 +1254,16 @@ Item {
               width: tabKanbanText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
               color: root.viewMode === "kanban" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
-              border.color: root.viewMode === "kanban" ? Color.accent : "transparent"
-              border.width: 1
+              border.color: root.viewMode === "kanban"
+                ? (root.focusArea === "tabs" ? "#f94dff" : Color.accent)
+                : (root.focusArea === "tabs" ? Util.alpha(root.foreground, 0.2) : "transparent")
+              border.width: root.viewMode === "kanban" && root.focusArea === "tabs" ? 2 : 1
 
               Text {
                 id: tabKanbanText
                 anchors.centerIn: parent
                 text: "Kanban (" + root.stats.pendingTotal + ")"
-                color: root.viewMode === "kanban" ? root.selectedText : root.foreground
+                color: root.viewMode === "kanban" ? (root.focusArea === "tabs" ? "#f94dff" : "#ffffff") : "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
                 font.bold: root.viewMode === "kanban"
@@ -1211,7 +1272,7 @@ Item {
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: { root.viewMode = "kanban"; keyCatcher.forceActiveFocus() }
+                onClicked: { root.viewMode = "kanban"; root.focusArea = "board"; keyCatcher.forceActiveFocus() }
               }
             }
 
@@ -1221,14 +1282,16 @@ Item {
               width: tabNotesText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
               color: root.viewMode === "notes" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
-              border.color: root.viewMode === "notes" ? "#04d1f9" : "transparent"
-              border.width: 1
+              border.color: root.viewMode === "notes"
+                ? (root.focusArea === "tabs" ? "#04d1f9" : Color.accent)
+                : (root.focusArea === "tabs" ? Util.alpha(root.foreground, 0.2) : "transparent")
+              border.width: root.viewMode === "notes" && root.focusArea === "tabs" ? 2 : 1
 
               Text {
                 id: tabNotesText
                 anchors.centerIn: parent
                 text: "Notes (" + root.stats.notes + ")"
-                color: root.viewMode === "notes" ? root.selectedText : root.foreground
+                color: root.viewMode === "notes" ? (root.focusArea === "tabs" ? "#04d1f9" : "#ffffff") : "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
                 font.bold: root.viewMode === "notes"
@@ -1237,7 +1300,7 @@ Item {
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: { root.viewMode = "notes"; keyCatcher.forceActiveFocus() }
+                onClicked: { root.viewMode = "notes"; root.focusArea = "board"; keyCatcher.forceActiveFocus() }
               }
             }
 
@@ -1247,14 +1310,16 @@ Item {
               width: tabIdeasText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
               color: root.viewMode === "ideas" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
-              border.color: root.viewMode === "ideas" ? "#ec4899" : "transparent"
-              border.width: 1
+              border.color: root.viewMode === "ideas"
+                ? (root.focusArea === "tabs" ? "#ec4899" : Color.accent)
+                : (root.focusArea === "tabs" ? Util.alpha(root.foreground, 0.2) : "transparent")
+              border.width: root.viewMode === "ideas" && root.focusArea === "tabs" ? 2 : 1
 
               Text {
                 id: tabIdeasText
                 anchors.centerIn: parent
                 text: "Ideas (" + root.stats.ideas + ")"
-                color: root.viewMode === "ideas" ? root.selectedText : root.foreground
+                color: root.viewMode === "ideas" ? (root.focusArea === "tabs" ? "#ec4899" : "#ffffff") : "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
                 font.bold: root.viewMode === "ideas"
@@ -1263,7 +1328,7 @@ Item {
               MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: { root.viewMode = "ideas"; keyCatcher.forceActiveFocus() }
+                onClicked: { root.viewMode = "ideas"; root.focusArea = "board"; keyCatcher.forceActiveFocus() }
               }
             }
           }
@@ -1291,7 +1356,7 @@ Item {
 
                 Text {
                   text: "󰍉"
-                  color: Color.muted
+                  color: "#94a3b8"
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.body
                   anchors.verticalCenter: parent.verticalCenter
@@ -1300,7 +1365,7 @@ Item {
                 TextInput {
                   id: searchInput
                   width: parent.width - Style.space(40)
-                  color: root.foreground
+                  color: "#ffffff"
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.body
                   anchors.verticalCenter: parent.verticalCenter
@@ -1320,8 +1385,8 @@ Item {
                   Text {
                     visible: !searchInput.text
                     text: "Filter (/)..."
-                    color: Color.muted
-                    opacity: 0.6
+                    color: "#64748b"
+                    opacity: 0.8
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     anchors.fill: parent
@@ -1333,7 +1398,7 @@ Item {
                 Text {
                   visible: searchInput.text.length > 0
                   text: "✕"
-                  color: Color.muted
+                  color: "#94a3b8"
                   font.pixelSize: Style.font.caption
                   anchors.verticalCenter: parent.verticalCenter
                   MouseArea {
@@ -1397,7 +1462,7 @@ Item {
               Text {
                 anchors.centerIn: parent
                 text: "✕"
-                color: root.foreground
+                color: "#e2e8f0"
                 font.pixelSize: Style.font.body
               }
 
@@ -1435,7 +1500,7 @@ Item {
                 columnType: "Todo"
                 badgeColor: "#f94dff"
                 columnIndex: 0
-                isActive: root.activeColumnIndex === 0
+                isActive: root.focusArea === "board" && root.activeColumnIndex === 0
                 rootView: root
               }
 
@@ -1448,7 +1513,7 @@ Item {
                 columnType: "Todo"
                 badgeColor: "#f1fc79"
                 columnIndex: 1
-                isActive: root.activeColumnIndex === 1
+                isActive: root.focusArea === "board" && root.activeColumnIndex === 1
                 rootView: root
               }
 
@@ -1461,7 +1526,7 @@ Item {
                 columnType: "Todo"
                 badgeColor: "#987afb"
                 columnIndex: 2
-                isActive: root.activeColumnIndex === 2
+                isActive: root.focusArea === "board" && root.activeColumnIndex === 2
                 rootView: root
               }
 
@@ -1474,7 +1539,7 @@ Item {
                 columnType: "Todo"
                 badgeColor: "#37f499"
                 columnIndex: 3
-                isActive: root.activeColumnIndex === 3
+                isActive: root.focusArea === "board" && root.activeColumnIndex === 3
                 rootView: root
               }
 
@@ -1487,7 +1552,7 @@ Item {
                 columnType: "Todo"
                 badgeColor: "#5f6b8a"
                 columnIndex: 4
-                isActive: root.activeColumnIndex === 4
+                isActive: root.focusArea === "board" && root.activeColumnIndex === 4
                 rootView: root
               }
             }
@@ -1498,7 +1563,9 @@ Item {
               height: Style.space(95)
               radius: root.cornerRadius
               color: Util.alpha(Color.menu.background, 0.7)
-              border.color: Util.alpha(Color.menu.border, 0.3)
+              border.color: root.focusArea === "tabs"
+                ? Util.alpha(Color.accent, 0.4)
+                : Util.alpha(Color.menu.border, 0.3)
               border.width: Style.normalBorderWidth
 
               property var activeTask: root.getSelectedTask()
@@ -1508,11 +1575,11 @@ Item {
                 anchors.margins: Style.space(10)
                 spacing: Style.space(6)
 
-                // Task details if selected
+                // Task details if in board mode and task selected
                 Row {
                   width: parent.width
                   spacing: Style.space(10)
-                  visible: Boolean(parent.parent.activeTask)
+                  visible: root.focusArea === "board" && Boolean(parent.parent.activeTask)
 
                   // Status Badge
                   Rectangle {
@@ -1589,7 +1656,7 @@ Item {
                   // Title preview
                   Text {
                     text: parent.parent.parent.activeTask ? parent.parent.parent.activeTask.title : ""
-                    color: root.foreground
+                    color: "#ffffff"
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.title
                     font.bold: true
@@ -1598,14 +1665,37 @@ Item {
                   }
                 }
 
-                // Empty / Placeholder text if no task selected
+                // Header if in Tabs Navigation mode
                 Row {
                   width: parent.width
                   spacing: Style.space(8)
-                  visible: !parent.parent.activeTask
+                  visible: root.focusArea === "tabs"
 
                   Text {
-                    text: "󰄲 SPAI Kanban Navigator — Select a task with ↑/↓"
+                    text: "󰄲 Tab Navigator Mode"
+                    color: "#04d1f9"
+                    font.family: root.fontFamily
+                    font.pixelSize: Style.font.title
+                    font.bold: true
+                  }
+
+                  Text {
+                    text: "— Press [←/→] to change Tab, press [↓] or [Enter] to jump into tasks"
+                    color: "#94a3b8"
+                    font.family: root.fontFamily
+                    font.pixelSize: Style.font.body
+                    anchors.verticalCenter: parent.verticalCenter
+                  }
+                }
+
+                // Placeholder if in Board mode without active task
+                Row {
+                  width: parent.width
+                  spacing: Style.space(8)
+                  visible: root.focusArea === "board" && !parent.parent.activeTask
+
+                  Text {
+                    text: "󰄲 SPAI Kanban Navigator — Select a task with ↑/↓ (or press ↑ at top to switch Tabs)"
                     color: Color.accent
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.title
@@ -1655,8 +1745,8 @@ Item {
                     Text {
                       id: s2Text
                       anchors.centerIn: parent
-                      text: "←/→ Column   ↑/↓ Select"
-                      color: root.foreground
+                      text: root.focusArea === "tabs" ? "←/→ Tabs   ↓ Enter Board" : "←/→ Column   ↑/↓ Select   (↑ Top = Tabs)"
+                      color: "#f1f5f9"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
                     }
@@ -1672,8 +1762,8 @@ Item {
                     Text {
                       id: s3Text
                       anchors.centerIn: parent
-                      text: "1..5 Set Status"
-                      color: root.foreground
+                      text: "1..5 Move Task"
+                      color: "#f1f5f9"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
                     }
@@ -1690,7 +1780,7 @@ Item {
                       id: s4Text
                       anchors.centerIn: parent
                       text: "X Toggle Done"
-                      color: root.foreground
+                      color: "#f1f5f9"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
                     }
@@ -1734,12 +1824,22 @@ Item {
             model: root.getFilteredList("Note", "note")
 
             delegate: Rectangle {
+              readonly property bool isCurNote: root.focusArea === "board" && index === root.selectedCardIndex
+
               width: ListView.view.width
               height: noteCol.implicitHeight + Style.space(24)
               radius: root.cornerRadius
-              color: Util.alpha(root.foreground, 0.04)
-              border.color: Util.alpha(root.border, 0.2)
-              border.width: Style.normalBorderWidth
+              color: isCurNote ? Util.alpha("#04d1f9", 0.12) : Util.alpha(root.foreground, 0.04)
+              border.color: isCurNote ? "#04d1f9" : Util.alpha(root.border, 0.2)
+              border.width: isCurNote ? 2 : Style.normalBorderWidth
+
+              MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                  root.focusArea = "board"
+                  root.selectedCardIndex = index
+                }
+              }
 
               Column {
                 id: noteCol
@@ -1757,7 +1857,7 @@ Item {
                     anchors.rightMargin: Style.space(10)
                     anchors.verticalCenter: parent.verticalCenter
                     text: "- " + modelData.title
-                    color: root.foreground
+                    color: isCurNote ? "#ffffff" : "#f1f5f9"
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     font.bold: true
@@ -1864,13 +1964,13 @@ Item {
                       height: Style.space(20)
                       width: tagNoteText.implicitWidth + Style.space(10)
                       radius: Style.space(4)
-                      color: Util.alpha(Color.accent, 0.15)
+                      color: Util.alpha("#04d1f9", 0.15)
 
                       Text {
                         id: tagNoteText
                         anchors.centerIn: parent
                         text: ":" + modelData + ":"
-                        color: Color.accent
+                        color: "#04d1f9"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
                       }
@@ -1892,15 +1992,15 @@ Item {
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
                   text: "󰎞"
-                  color: Color.muted
+                  color: "#64748b"
                   font.pixelSize: Style.font.displayLarge
-                  opacity: 0.5
+                  opacity: 0.6
                 }
 
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
                   text: "No notes yet · Press N and type '- Your note'"
-                  color: Color.muted
+                  color: "#94a3b8"
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.subtitle
                 }
@@ -1923,12 +2023,22 @@ Item {
             model: root.getFilteredList("Idea", "idea")
 
             delegate: Rectangle {
+              readonly property bool isCurIdea: root.focusArea === "board" && index === root.selectedCardIndex
+
               width: ListView.view.width
               height: ideaCol.implicitHeight + Style.space(24)
               radius: root.cornerRadius
-              color: Util.alpha(root.foreground, 0.04)
-              border.color: Util.alpha(root.border, 0.2)
-              border.width: Style.normalBorderWidth
+              color: isCurIdea ? Util.alpha("#ec4899", 0.12) : Util.alpha(root.foreground, 0.04)
+              border.color: isCurIdea ? "#ec4899" : Util.alpha(root.border, 0.2)
+              border.width: isCurIdea ? 2 : Style.normalBorderWidth
+
+              MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                  root.focusArea = "board"
+                  root.selectedCardIndex = index
+                }
+              }
 
               Column {
                 id: ideaCol
@@ -1946,7 +2056,7 @@ Item {
                     anchors.rightMargin: Style.space(10)
                     anchors.verticalCenter: parent.verticalCenter
                     text: "? " + modelData.title
-                    color: root.foreground
+                    color: isCurIdea ? "#ffffff" : "#f1f5f9"
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     font.bold: true
@@ -2081,15 +2191,15 @@ Item {
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
                   text: "󰌵"
-                  color: Color.muted
+                  color: "#64748b"
                   font.pixelSize: Style.font.displayLarge
-                  opacity: 0.5
+                  opacity: 0.6
                 }
 
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
                   text: "No ideas recorded · Press N and type '? Your idea'"
-                  color: Color.muted
+                  color: "#94a3b8"
                   font.family: root.fontFamily
                   font.pixelSize: Style.font.subtitle
                 }

@@ -47,7 +47,7 @@ Rectangle {
 
         Text {
           text: root.title.toUpperCase()
-          color: root.isActive ? root.badgeColor : Color.menu.text
+          color: root.isActive ? root.badgeColor : "#f8fafc"
           font.family: Style.font.menuFamily
           font.pixelSize: Style.font.subtitle
           font.bold: true
@@ -139,7 +139,7 @@ Rectangle {
         columnIndex: root.columnIndex
         cardIndex: index
         statusColor: root.badgeColor
-        isSelected: root.isActive && index === root.rootView.selectedCardIndex
+        isSelected: root.rootView.focusArea === "board" && root.isActive && index === root.rootView.selectedCardIndex
       }
 
       // Empty State
@@ -154,10 +154,10 @@ Rectangle {
           Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "No tasks"
-            color: Color.muted
+            color: "#94a3b8"
             font.family: Style.font.menuFamily
             font.pixelSize: Style.font.caption
-            opacity: 0.5
+            opacity: 0.6
           }
         }
       }

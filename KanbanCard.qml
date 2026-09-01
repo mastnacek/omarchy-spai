@@ -19,11 +19,11 @@ Rectangle {
   height: cardContent.implicitHeight + Style.space(18)
   radius: Style.cornerRadius
   color: root.isSelected
-    ? Util.alpha(root.statusColor, 0.15)
-    : (cardHover.containsMouse ? Util.alpha(Color.menu.background, 0.98) : Util.alpha(Color.menu.background, 0.78))
+    ? Util.alpha(root.statusColor, 0.16)
+    : (cardHover.containsMouse ? Util.alpha(Color.menu.background, 0.98) : Util.alpha(Color.menu.background, 0.8))
   border.color: root.isSelected
     ? root.statusColor
-    : (isUrgent ? Util.alpha("#f16c75", 0.7) : (cardHover.containsMouse ? Util.alpha(root.statusColor, 0.5) : Util.alpha(Color.menu.border, 0.2)))
+    : (isUrgent ? Util.alpha("#f16c75", 0.75) : (cardHover.containsMouse ? Util.alpha(root.statusColor, 0.5) : Util.alpha(Color.menu.border, 0.2)))
   border.width: root.isSelected ? 2 : (cardHover.containsMouse ? 1.5 : 1)
 
   MouseArea {
@@ -33,6 +33,7 @@ Rectangle {
     cursorShape: Qt.PointingHandCursor
     onClicked: {
       if (root.rootView) {
+        root.rootView.focusArea = "board"
         root.rootView.activeColumnIndex = root.columnIndex
         root.rootView.selectedCardIndex = root.cardIndex
       }
@@ -52,9 +53,9 @@ Rectangle {
 
       // Status indicator dot
       Rectangle {
-        width: Style.space(7)
-        height: Style.space(7)
-        radius: Style.space(3.5)
+        width: Style.space(8)
+        height: Style.space(8)
+        radius: Style.space(4)
         color: root.statusColor
         anchors.verticalCenter: parent.verticalCenter
       }
@@ -79,16 +80,17 @@ Rectangle {
         }
       }
 
+      // High-contrast, clean title font
       Text {
         text: root.cardData ? root.cardData.title : ""
         color: (root.isDone || root.isCancelled)
-          ? Color.muted
-          : (root.isSelected ? root.statusColor : Color.menu.text)
+          ? "#94a3b8"
+          : (root.isSelected ? "#ffffff" : "#f1f5f9")
         font.family: Style.font.menuFamily
         font.pixelSize: Style.font.body
         font.strikeout: root.isDone || root.isCancelled
         font.bold: !root.isDone && !root.isCancelled || root.isSelected
-        width: parent.width - (root.isUrgent ? Style.space(34) : Style.space(15))
+        width: parent.width - (root.isUrgent ? Style.space(36) : Style.space(16))
         wrapMode: Text.Wrap
       }
     }
@@ -105,8 +107,8 @@ Rectangle {
         height: Style.space(20)
         width: deadlineText.implicitWidth + Style.space(12)
         radius: Style.space(4)
-        color: Util.alpha(Color.accent, 0.12)
-        border.color: Util.alpha(Color.accent, 0.3)
+        color: Util.alpha("#04d1f9", 0.15)
+        border.color: Util.alpha("#04d1f9", 0.35)
         border.width: 1
 
         Row {
@@ -115,16 +117,17 @@ Rectangle {
 
           Text {
             text: "󰃰"
-            color: Color.accent
+            color: "#04d1f9"
             font.pixelSize: Style.font.caption
           }
 
           Text {
             id: deadlineText
             text: root.cardData && root.cardData.deadline ? root.cardData.deadline : ""
-            color: Color.accent
+            color: "#04d1f9"
             font.family: Style.font.menuFamily
             font.pixelSize: Style.font.caption
+            font.bold: true
           }
         }
       }
@@ -136,15 +139,15 @@ Rectangle {
           height: Style.space(20)
           width: tagText.implicitWidth + Style.space(10)
           radius: Style.space(4)
-          color: Util.alpha(Color.menu.text, 0.06)
-          border.color: Util.alpha(Color.menu.text, 0.12)
+          color: Util.alpha(Color.menu.text, 0.08)
+          border.color: Util.alpha(Color.menu.text, 0.15)
           border.width: 1
 
           Text {
             id: tagText
             anchors.centerIn: parent
             text: ":" + modelData + ":"
-            color: Color.muted
+            color: "#cbd5e1"
             font.family: Style.font.menuFamily
             font.pixelSize: Style.font.caption
           }
@@ -169,14 +172,14 @@ Rectangle {
           height: Style.space(22)
           width: Style.space(22)
           radius: Style.space(4)
-          color: Util.alpha(Color.menu.text, 0.08)
-          border.color: Util.alpha(Color.menu.text, 0.15)
+          color: Util.alpha(Color.menu.text, 0.1)
+          border.color: Util.alpha(Color.menu.text, 0.2)
           border.width: 1
 
           Text {
             anchors.centerIn: parent
             text: "←"
-            color: Color.menu.text
+            color: "#f1f5f9"
             font.pixelSize: Style.font.caption
           }
 
@@ -196,14 +199,14 @@ Rectangle {
           height: Style.space(22)
           width: Style.space(22)
           radius: Style.space(4)
-          color: Util.alpha(Color.menu.text, 0.08)
-          border.color: Util.alpha(Color.menu.text, 0.15)
+          color: Util.alpha(Color.menu.text, 0.1)
+          border.color: Util.alpha(Color.menu.text, 0.2)
           border.width: 1
 
           Text {
             anchors.centerIn: parent
             text: "→"
-            color: Color.menu.text
+            color: "#f1f5f9"
             font.pixelSize: Style.font.caption
           }
 
@@ -223,14 +226,14 @@ Rectangle {
           height: Style.space(22)
           width: Style.space(22)
           radius: Style.space(4)
-          color: root.isDone ? Util.alpha("#37f499", 0.25) : Util.alpha(Color.menu.text, 0.08)
-          border.color: root.isDone ? "#37f499" : Util.alpha(Color.menu.text, 0.15)
+          color: root.isDone ? Util.alpha("#37f499", 0.3) : Util.alpha(Color.menu.text, 0.1)
+          border.color: root.isDone ? "#37f499" : Util.alpha(Color.menu.text, 0.2)
           border.width: 1
 
           Text {
             anchors.centerIn: parent
             text: "✓"
-            color: root.isDone ? "#37f499" : Color.menu.text
+            color: root.isDone ? "#37f499" : "#f1f5f9"
             font.pixelSize: Style.font.caption
             font.bold: true
           }
@@ -255,8 +258,8 @@ Rectangle {
         height: Style.space(22)
         width: Style.space(22)
         radius: Style.space(4)
-        color: Util.alpha("#f16c75", 0.15)
-        border.color: Util.alpha("#f16c75", 0.35)
+        color: Util.alpha("#f16c75", 0.18)
+        border.color: Util.alpha("#f16c75", 0.4)
         border.width: 1
 
         Text {
