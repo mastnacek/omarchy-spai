@@ -1032,6 +1032,15 @@ Item {
               var t1 = root.getSelectedTask()
               if (t1) root.updateStatusAndFollow(t1.id, "todo")
               else root.activeColumnIndex = 0
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lType1 = root.viewMode === "notes" ? "Note" : "Idea"
+              var lSt1 = root.viewMode === "notes" ? "note" : "idea"
+              var list1 = root.getFilteredList(lType1, lSt1)
+              var it1 = list1[root.selectedCardIndex] || list1[0]
+              if (it1) {
+                root.updateStatusAndFollow(it1.id, "todo")
+                root.viewMode = "kanban"
+              }
             }
             event.accepted = true
           } else if (event.key === Qt.Key_2) {
@@ -1039,6 +1048,15 @@ Item {
               var t2 = root.getSelectedTask()
               if (t2) root.updateStatusAndFollow(t2.id, "working")
               else root.activeColumnIndex = 1
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lType2 = root.viewMode === "notes" ? "Note" : "Idea"
+              var lSt2 = root.viewMode === "notes" ? "note" : "idea"
+              var list2 = root.getFilteredList(lType2, lSt2)
+              var it2 = list2[root.selectedCardIndex] || list2[0]
+              if (it2) {
+                root.updateStatusAndFollow(it2.id, "working")
+                root.viewMode = "kanban"
+              }
             }
             event.accepted = true
           } else if (event.key === Qt.Key_3) {
@@ -1046,6 +1064,15 @@ Item {
               var t3 = root.getSelectedTask()
               if (t3) root.updateStatusAndFollow(t3.id, "waiting")
               else root.activeColumnIndex = 2
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lType3 = root.viewMode === "notes" ? "Note" : "Idea"
+              var lSt3 = root.viewMode === "notes" ? "note" : "idea"
+              var list3 = root.getFilteredList(lType3, lSt3)
+              var it3 = list3[root.selectedCardIndex] || list3[0]
+              if (it3) {
+                root.updateStatusAndFollow(it3.id, "waiting")
+                root.viewMode = "kanban"
+              }
             }
             event.accepted = true
           } else if (event.key === Qt.Key_4) {
@@ -1053,6 +1080,15 @@ Item {
               var t4 = root.getSelectedTask()
               if (t4) root.updateStatusAndFollow(t4.id, "done")
               else root.activeColumnIndex = 3
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lType4 = root.viewMode === "notes" ? "Note" : "Idea"
+              var lSt4 = root.viewMode === "notes" ? "note" : "idea"
+              var list4 = root.getFilteredList(lType4, lSt4)
+              var it4 = list4[root.selectedCardIndex] || list4[0]
+              if (it4) {
+                root.updateStatusAndFollow(it4.id, "done")
+                root.viewMode = "kanban"
+              }
             }
             event.accepted = true
           } else if (event.key === Qt.Key_5) {
@@ -1060,6 +1096,15 @@ Item {
               var t5 = root.getSelectedTask()
               if (t5) root.updateStatusAndFollow(t5.id, "cancelled")
               else root.activeColumnIndex = 4
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lType5 = root.viewMode === "notes" ? "Note" : "Idea"
+              var lSt5 = root.viewMode === "notes" ? "note" : "idea"
+              var list5 = root.getFilteredList(lType5, lSt5)
+              var it5 = list5[root.selectedCardIndex] || list5[0]
+              if (it5) {
+                root.updateStatusAndFollow(it5.id, "cancelled")
+                root.viewMode = "kanban"
+              }
             }
             event.accepted = true
           } else if (event.key === Qt.Key_6) {
@@ -1681,28 +1726,109 @@ Item {
                 anchors.margins: Style.space(12)
                 spacing: Style.space(8)
 
-                Row {
+                Item {
                   width: parent.width
-                  spacing: Style.space(8)
+                  height: Style.space(28)
 
                   Text {
+                    anchors.left: parent.left
+                    anchors.right: noteActions.left
+                    anchors.rightMargin: Style.space(10)
+                    anchors.verticalCenter: parent.verticalCenter
                     text: "- " + modelData.title
                     color: root.foreground
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     font.bold: true
-                    width: parent.width - Style.space(50)
                     wrapMode: Text.Wrap
                   }
 
-                  Text {
-                    text: "✕"
-                    color: Color.muted
-                    font.pixelSize: Style.font.body
-                    MouseArea {
-                      anchors.fill: parent
-                      cursorShape: Qt.PointingHandCursor
-                      onClicked: root.deleteItem(modelData.id)
+                  Row {
+                    id: noteActions
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Style.space(6)
+
+                    // Convert to Todo
+                    Rectangle {
+                      height: Style.space(22)
+                      width: nTodoText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#f94dff", 0.15)
+                      border.color: Util.alpha("#f94dff", 0.3)
+                      border.width: 1
+
+                      Text {
+                        id: nTodoText
+                        anchors.centerIn: parent
+                        text: "→ Todo"
+                        color: "#f94dff"
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.updateStatusAndFollow(modelData.id, "todo")
+                          root.viewMode = "kanban"
+                        }
+                      }
+                    }
+
+                    // Convert to Working
+                    Rectangle {
+                      height: Style.space(22)
+                      width: nWorkText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#f1fc79", 0.15)
+                      border.color: Util.alpha("#f1fc79", 0.3)
+                      border.width: 1
+
+                      Text {
+                        id: nWorkText
+                        anchors.centerIn: parent
+                        text: "→ Work"
+                        color: "#f1fc79"
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.updateStatusAndFollow(modelData.id, "working")
+                          root.viewMode = "kanban"
+                        }
+                      }
+                    }
+
+                    // Delete Note
+                    Rectangle {
+                      height: Style.space(22)
+                      width: Style.space(22)
+                      radius: Style.space(4)
+                      color: Util.alpha(Color.urgent, 0.15)
+                      border.color: Util.alpha(Color.urgent, 0.3)
+                      border.width: 1
+
+                      Text {
+                        anchors.centerIn: parent
+                        text: "✕"
+                        color: Color.urgent
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.deleteItem(modelData.id)
+                      }
                     }
                   }
                 }
@@ -1789,54 +1915,109 @@ Item {
                 anchors.margins: Style.space(12)
                 spacing: Style.space(8)
 
-                Row {
+                Item {
                   width: parent.width
-                  spacing: Style.space(8)
+                  height: Style.space(28)
 
                   Text {
+                    anchors.left: parent.left
+                    anchors.right: ideaActions.left
+                    anchors.rightMargin: Style.space(10)
+                    anchors.verticalCenter: parent.verticalCenter
                     text: "? " + modelData.title
                     color: root.foreground
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.body
                     font.bold: true
-                    width: parent.width - Style.space(150)
                     wrapMode: Text.Wrap
                   }
 
-                  // Convert to task button
-                  Rectangle {
-                    height: Style.space(26)
-                    width: convText.implicitWidth + Style.space(14)
-                    radius: Style.space(4)
-                    color: Util.alpha(Color.accent, 0.2)
-                    border.color: Util.alpha(Color.accent, 0.4)
-                    border.width: 1
+                  Row {
+                    id: ideaActions
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Style.space(6)
 
-                    Text {
-                      id: convText
-                      anchors.centerIn: parent
-                      text: "→ Convert to Task"
-                      color: Color.accent
-                      font.family: root.fontFamily
-                      font.pixelSize: Style.font.caption
-                      font.bold: true
+                    // Convert to Todo
+                    Rectangle {
+                      height: Style.space(22)
+                      width: iTodoText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#f94dff", 0.15)
+                      border.color: Util.alpha("#f94dff", 0.3)
+                      border.width: 1
+
+                      Text {
+                        id: iTodoText
+                        anchors.centerIn: parent
+                        text: "→ Todo"
+                        color: "#f94dff"
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.updateStatusAndFollow(modelData.id, "todo")
+                          root.viewMode = "kanban"
+                        }
+                      }
                     }
 
-                    MouseArea {
-                      anchors.fill: parent
-                      cursorShape: Qt.PointingHandCursor
-                      onClicked: root.updateStatus(modelData.id, "todo")
-                    }
-                  }
+                    // Convert to Working
+                    Rectangle {
+                      height: Style.space(22)
+                      width: iWorkText.implicitWidth + Style.space(10)
+                      radius: Style.space(4)
+                      color: Util.alpha("#f1fc79", 0.15)
+                      border.color: Util.alpha("#f1fc79", 0.3)
+                      border.width: 1
 
-                  Text {
-                    text: "✕"
-                    color: Color.muted
-                    font.pixelSize: Style.font.body
-                    MouseArea {
-                      anchors.fill: parent
-                      cursorShape: Qt.PointingHandCursor
-                      onClicked: root.deleteItem(modelData.id)
+                      Text {
+                        id: iWorkText
+                        anchors.centerIn: parent
+                        text: "→ Work"
+                        color: "#f1fc79"
+                        font.family: root.fontFamily
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          root.updateStatusAndFollow(modelData.id, "working")
+                          root.viewMode = "kanban"
+                        }
+                      }
+                    }
+
+                    // Delete Idea
+                    Rectangle {
+                      height: Style.space(22)
+                      width: Style.space(22)
+                      radius: Style.space(4)
+                      color: Util.alpha(Color.urgent, 0.15)
+                      border.color: Util.alpha(Color.urgent, 0.3)
+                      border.width: 1
+
+                      Text {
+                        anchors.centerIn: parent
+                        text: "✕"
+                        color: Color.urgent
+                        font.pixelSize: Style.font.caption
+                        font.bold: true
+                      }
+
+                      MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.deleteItem(modelData.id)
+                      }
                     }
                   }
                 }

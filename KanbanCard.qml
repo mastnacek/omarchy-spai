@@ -136,107 +136,113 @@ Rectangle {
       }
     }
 
-    // Bottom Action Bar (Visible on Hover or when Selected)
-    Row {
+    // Bottom Action Bar (Anchored safely inside card)
+    Item {
       width: parent.width
       height: Style.space(24)
-      spacing: Style.space(6)
       visible: cardHover.containsMouse || root.isSelected
 
-      // Move Left
-      Rectangle {
-        height: Style.space(22)
-        width: Style.space(22)
-        radius: Style.space(4)
-        color: Util.alpha(Color.menu.text, 0.1)
+      // Left Actions: Move Left, Move Right, Toggle Done
+      Row {
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: Style.space(6)
 
-        Text {
-          anchors.centerIn: parent
-          text: "←"
-          color: Color.menu.text
-          font.pixelSize: Style.font.caption
+        // Move Left
+        Rectangle {
+          height: Style.space(22)
+          width: Style.space(22)
+          radius: Style.space(4)
+          color: Util.alpha(Color.menu.text, 0.1)
+
+          Text {
+            anchors.centerIn: parent
+            text: "←"
+            color: Color.menu.text
+            font.pixelSize: Style.font.caption
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+              if (root.rootView && root.cardData) {
+                root.rootView.cycleItemStatusAndFollow(root.cardData.id, -1)
+              }
+            }
+          }
         }
 
-        MouseArea {
-          anchors.fill: parent
-          cursorShape: Qt.PointingHandCursor
-          onClicked: {
-            if (root.rootView && root.cardData) {
-              root.rootView.cycleItemStatusAndFollow(root.cardData.id, -1)
+        // Move Right / Space
+        Rectangle {
+          height: Style.space(22)
+          width: Style.space(22)
+          radius: Style.space(4)
+          color: Util.alpha(Color.menu.text, 0.1)
+
+          Text {
+            anchors.centerIn: parent
+            text: "→"
+            color: Color.menu.text
+            font.pixelSize: Style.font.caption
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+              if (root.rootView && root.cardData) {
+                root.rootView.cycleItemStatusAndFollow(root.cardData.id, 1)
+              }
+            }
+          }
+        }
+
+        // Toggle Done
+        Rectangle {
+          height: Style.space(22)
+          width: Style.space(22)
+          radius: Style.space(4)
+          color: root.isDone ? Util.alpha("#37f499", 0.3) : Util.alpha(Color.menu.text, 0.1)
+
+          Text {
+            anchors.centerIn: parent
+            text: "✓"
+            color: root.isDone ? "#37f499" : Color.menu.text
+            font.pixelSize: Style.font.caption
+            font.bold: true
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+              if (root.rootView && root.cardData) {
+                var next = root.isDone ? "todo" : "done"
+                root.rootView.updateStatusAndFollow(root.cardData.id, next)
+              }
             }
           }
         }
       }
 
-      // Move Right / Space
+      // Right Action: Delete Button (Anchored to right, never cut off!)
       Rectangle {
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
         height: Style.space(22)
         width: Style.space(22)
         radius: Style.space(4)
-        color: Util.alpha(Color.menu.text, 0.1)
-
-        Text {
-          anchors.centerIn: parent
-          text: "→"
-          color: Color.menu.text
-          font.pixelSize: Style.font.caption
-        }
-
-        MouseArea {
-          anchors.fill: parent
-          cursorShape: Qt.PointingHandCursor
-          onClicked: {
-            if (root.rootView && root.cardData) {
-              root.rootView.cycleItemStatusAndFollow(root.cardData.id, 1)
-            }
-          }
-        }
-      }
-
-      // Toggle Done
-      Rectangle {
-        height: Style.space(22)
-        width: Style.space(22)
-        radius: Style.space(4)
-        color: root.isDone ? Util.alpha("#37f499", 0.3) : Util.alpha(Color.menu.text, 0.1)
-
-        Text {
-          anchors.centerIn: parent
-          text: "✓"
-          color: root.isDone ? "#37f499" : Color.menu.text
-          font.pixelSize: Style.font.caption
-          font.bold: true
-        }
-
-        MouseArea {
-          anchors.fill: parent
-          cursorShape: Qt.PointingHandCursor
-          onClicked: {
-            if (root.rootView && root.cardData) {
-              var next = root.isDone ? "todo" : "done"
-              root.rootView.updateStatusAndFollow(root.cardData.id, next)
-            }
-          }
-        }
-      }
-
-      Item {
-        width: Math.max(0, parent.width - Style.space(90))
-        height: 1
-      }
-
-      // Delete
-      Rectangle {
-        height: Style.space(22)
-        width: Style.space(22)
-        radius: Style.space(4)
-        color: Util.alpha(Color.urgent, 0.15)
+        color: Util.alpha(Color.urgent, 0.18)
+        border.color: Util.alpha(Color.urgent, 0.35)
+        border.width: 1
 
         Text {
           anchors.centerIn: parent
           text: "✕"
           color: Color.urgent
           font.pixelSize: Style.font.caption
+          font.bold: true
         }
 
         MouseArea {
