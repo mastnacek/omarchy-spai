@@ -467,6 +467,20 @@ Item {
               verticalAlignment: TextInput.AlignVCenter
               clip: true
 
+              onTextEdited: {
+                var t = captureInput.text
+                if (t === "." || t === "?" || t === "-" || t === "x" || t === "X" || t === "z" || t === "Z") {
+                  captureInput.text = t + " "
+                  captureInput.cursorPosition = 2
+                } else if (t === "/." || t === "/. ") {
+                  captureInput.text = "/. "
+                  captureInput.cursorPosition = 3
+                } else if (t.length === 2 && t.indexOf("/") === 0 && t.charAt(1) !== "." && t.charAt(1) !== " ") {
+                  captureInput.text = "/ " + t.slice(1)
+                  captureInput.cursorPosition = 3
+                }
+              }
+
               Keys.onEscapePressed: function(event) {
                 root.close()
                 event.accepted = true
