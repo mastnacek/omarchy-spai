@@ -234,7 +234,7 @@ function getStats(items) {
   return stats;
 }
 
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== "undefined" && module && module.exports) {
   module.exports = {
     getSpaiPrefixes,
     generateId,
