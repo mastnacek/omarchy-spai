@@ -202,7 +202,10 @@ Rectangle {
         }
       }
 
-      Item { width: 1; height: 1; Layout.fillWidth: true }
+      Item {
+        width: Math.max(0, parent.width - Style.space(80))
+        height: 1
+      }
 
       // Delete
       Rectangle {

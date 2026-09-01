@@ -202,7 +202,10 @@ Item {
             verticalAlignment: Text.AlignVCenter
           }
 
-          Item { width: 1; height: 1; Layout.fillWidth: true }
+          Item {
+            width: Math.max(0, parent.width - Style.space(350))
+            height: 1
+          }
 
           Text {
             text: "Esc to close · Enter to save"
@@ -495,7 +498,10 @@ Item {
             }
           }
 
-          Item { width: 1; height: 1; Layout.fillWidth: true }
+          Item {
+            width: Math.max(0, parent.width - Style.space(750))
+            height: 1
+          }
 
           // Search Field
           Rectangle {

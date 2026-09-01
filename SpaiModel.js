@@ -1,22 +1,24 @@
 // SpaiModel.js - Core SPAI Logic for Omarchy Plugin
 
-export const SPAI_PREFIXES = [
-  { prefix: "/. ", marker: "/.", type: "Todo", status: "waiting" },
-  { prefix: ". ", marker: ".", type: "Todo", status: "todo" },
-  { prefix: "/ ", marker: "/", type: "Todo", status: "working" },
-  { prefix: "x ", marker: "x", type: "Todo", status: "done" },
-  { prefix: "X ", marker: "X", type: "Todo", status: "done" },
-  { prefix: "z ", marker: "z", type: "Todo", status: "cancelled" },
-  { prefix: "Z ", marker: "Z", type: "Todo", status: "cancelled" },
-  { prefix: "- ", marker: "-", type: "Note", status: "note" },
-  { prefix: "? ", marker: "?", type: "Idea", status: "idea" },
-];
+function getSpaiPrefixes() {
+  return [
+    { prefix: "/. ", marker: "/.", type: "Todo", status: "waiting" },
+    { prefix: ". ", marker: ".", type: "Todo", status: "todo" },
+    { prefix: "/ ", marker: "/", type: "Todo", status: "working" },
+    { prefix: "x ", marker: "x", type: "Todo", status: "done" },
+    { prefix: "X ", marker: "X", type: "Todo", status: "done" },
+    { prefix: "z ", marker: "z", type: "Todo", status: "cancelled" },
+    { prefix: "Z ", marker: "Z", type: "Todo", status: "cancelled" },
+    { prefix: "- ", marker: "-", type: "Note", status: "note" },
+    { prefix: "? ", marker: "?", type: "Idea", status: "idea" },
+  ];
+}
 
-export function generateId() {
+function generateId() {
   return `spai_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export function parseRawItem(rawText) {
+function parseRawItem(rawText) {
   const text = (rawText || "").trim();
   if (!text) return null;
 
@@ -25,8 +27,9 @@ export function parseRawItem(rawText) {
   let symbol = ".";
   let content = text;
 
-  for (let i = 0; i < SPAI_PREFIXES.length; i++) {
-    const def = SPAI_PREFIXES[i];
+  const prefixes = getSpaiPrefixes();
+  for (let i = 0; i < prefixes.length; i++) {
+    const def = prefixes[i];
     if (text.startsWith(def.prefix)) {
       type = def.type;
       status = def.status;
@@ -92,19 +95,20 @@ export function parseRawItem(rawText) {
   };
 }
 
-export function parseItems(jsonString) {
+function parseItems(jsonString) {
   if (!jsonString) return [];
   try {
     const data = JSON.parse(jsonString);
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.items)) return data.items;
     return [];
-  } catch {
+  } catch (err) {
+    void err;
     return [];
   }
 }
 
-export function formatItems(items) {
+function formatItems(items) {
   return JSON.stringify(
     {
       version: 1,
@@ -116,7 +120,7 @@ export function formatItems(items) {
   );
 }
 
-export function addItem(items, rawOrItem) {
+function addItem(items, rawOrItem) {
   const list = (items || []).slice();
   const item =
     typeof rawOrItem === "string" ? parseRawItem(rawOrItem) : rawOrItem;
@@ -125,7 +129,7 @@ export function addItem(items, rawOrItem) {
   return list;
 }
 
-export function updateItem(items, id, updates) {
+function updateItem(items, id, updates) {
   const list = (items || []).slice();
   for (let i = 0; i < list.length; i++) {
     if (list[i].id === id) {
@@ -140,11 +144,11 @@ export function updateItem(items, id, updates) {
   return list;
 }
 
-export function removeItem(items, id) {
+function removeItem(items, id) {
   return (items || []).filter((it) => it.id !== id);
 }
 
-export function moveStatus(items, id, targetStatus) {
+function moveStatus(items, id, targetStatus) {
   const valid = [
     "todo",
     "working",
@@ -163,7 +167,7 @@ export function moveStatus(items, id, targetStatus) {
   return updateItem(items, id, { status: targetStatus, type: type });
 }
 
-export function cycleStatus(items, id, direction) {
+function cycleStatus(items, id, direction) {
   const statuses = ["todo", "working", "waiting", "done"];
   const list = items || [];
   for (let i = 0; i < list.length; i++) {
@@ -178,7 +182,7 @@ export function cycleStatus(items, id, direction) {
   return list;
 }
 
-export function filterItems(items, filterText, typeFilter, statusFilter) {
+function filterItems(items, filterText, typeFilter, statusFilter) {
   const list = items || [];
   const q = (filterText || "").toLowerCase().trim();
 
@@ -196,7 +200,7 @@ export function filterItems(items, filterText, typeFilter, statusFilter) {
   });
 }
 
-export function getStats(items) {
+function getStats(items) {
   const list = items || [];
   const stats = {
     total: list.length,
@@ -228,4 +232,21 @@ export function getStats(items) {
   }
 
   return stats;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    getSpaiPrefixes,
+    generateId,
+    parseRawItem,
+    parseItems,
+    formatItems,
+    addItem,
+    updateItem,
+    removeItem,
+    moveStatus,
+    cycleStatus,
+    filterItems,
+    getStats,
+  };
 }

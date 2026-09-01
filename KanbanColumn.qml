@@ -65,7 +65,10 @@ Rectangle {
         }
       }
 
-      Item { width: 1; height: 1; Layout.fillWidth: true }
+      Item {
+        width: Math.max(0, parent.width - countText.implicitWidth - Style.space(90))
+        height: 1
+      }
 
       // + Button for this specific column
       Rectangle {
