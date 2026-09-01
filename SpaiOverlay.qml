@@ -286,6 +286,8 @@ Item {
     } else {
       captureInput.text = cur + (cur && !cur.endsWith(" ") ? " " : "") + token + " "
     }
+    captureInput.prevLength = captureInput.text.length
+    captureInput.cursorPosition = captureInput.text.length
     captureInput.forceActiveFocus()
   }
 
@@ -467,17 +469,52 @@ Item {
               verticalAlignment: TextInput.AlignVCenter
               clip: true
 
+              property int prevLength: 0
+              property bool isDeleting: false
+
+              Keys.onPressed: function(event) {
+                if (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) {
+                  captureInput.isDeleting = true
+                } else {
+                  captureInput.isDeleting = false
+                }
+              }
+
               onTextEdited: {
                 var t = captureInput.text
+                var deleting = captureInput.isDeleting || t.length < captureInput.prevLength
+                captureInput.prevLength = t.length
+                captureInput.isDeleting = false
+
+                if (deleting) {
+                  return
+                }
+
+                // 1. Single character prefix at start of empty input
                 if (t === "." || t === "?" || t === "-" || t === "x" || t === "X" || t === "z" || t === "Z") {
                   captureInput.text = t + " "
                   captureInput.cursorPosition = 2
+                  captureInput.prevLength = 2
                 } else if (t === "/." || t === "/. ") {
                   captureInput.text = "/. "
                   captureInput.cursorPosition = 3
+                  captureInput.prevLength = 3
                 } else if (t.length === 2 && t.indexOf("/") === 0 && t.charAt(1) !== "." && t.charAt(1) !== " ") {
                   captureInput.text = "/ " + t.slice(1)
                   captureInput.cursorPosition = 3
+                  captureInput.prevLength = captureInput.text.length
+                }
+                // 2. Priority modifier `!`
+                else if (t === "!" || t.endsWith(" !")) {
+                  captureInput.text = t + " "
+                  captureInput.cursorPosition = captureInput.text.length
+                  captureInput.prevLength = captureInput.text.length
+                }
+                // 3. Completed tag `:tag:`
+                else if (/(?:^|\s):[A-Za-z0-9_./-]+(?::[A-Za-z0-9_./-]+)*:$/.test(t)) {
+                  captureInput.text = t + " "
+                  captureInput.cursorPosition = captureInput.text.length
+                  captureInput.prevLength = captureInput.text.length
                 }
               }
 
