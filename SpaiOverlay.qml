@@ -38,7 +38,7 @@ Item {
 
   property int modalWidth: Math.min(Style.space(1280), panel.width - Style.gapsOut * 2)
   property int modalHeight: Math.min(Style.space(740), panel.height - Style.gapsOut * 2)
-  property int captureWidth: Math.min(Style.space(680), panel.width - Style.gapsOut * 2)
+  property int captureWidth: Math.min(Style.space(660), panel.width - Style.gapsOut * 2)
   property alias captureInputText: captureInput.text
 
   function open(payloadJson) {
@@ -243,14 +243,14 @@ Item {
     }
 
     // ==========================================
-    // 1. QUICK CAPTURE MODAL
+    // 1. QUICK CAPTURE MODAL (Spotlight / Raycast Style)
     // ==========================================
     BorderSurface {
       id: captureModal
       visible: root.viewMode === "capture"
       width: root.captureWidth
       height: captureCol.implicitHeight + Style.space(36)
-      radius: root.cornerRadius + Style.space(4)
+      radius: root.cornerRadius + Style.space(6)
       anchors.centerIn: parent
       color: root.background
       borderSpec: root.borderSpec
@@ -266,13 +266,14 @@ Item {
         spacing: Style.space(12)
 
         // Header
-        Row {
+        Item {
           width: parent.width
           height: Style.space(32)
 
           Row {
-            spacing: Style.space(8)
+            anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(8)
 
             Rectangle {
               width: Style.space(28)
@@ -301,15 +302,11 @@ Item {
             }
           }
 
-          Item {
-            width: Math.max(0, parent.width - Style.space(400))
-            height: 1
-          }
-
-          // Keycap Hints
+          // Keycap Hints on Right
           Row {
-            spacing: Style.space(6)
+            anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(6)
 
             Rectangle {
               height: Style.space(22)
@@ -359,13 +356,13 @@ Item {
           border.color: {
             if (captureModal.detected) {
               var st = captureModal.detected.status
-              if (st === "todo") return "#38bdf8"
-              if (st === "working") return "#f59e0b"
-              if (st === "waiting") return "#a855f7"
-              if (st === "done") return "#10b981"
-              if (st === "cancelled") return "#94a3b8"
+              if (st === "todo") return "#f94dff"
+              if (st === "working") return "#f1fc79"
+              if (st === "waiting") return "#987afb"
+              if (st === "done") return "#37f499"
+              if (st === "cancelled") return "#5f6b8a"
               if (st === "idea") return "#ec4899"
-              return root.foreground
+              return "#04d1f9"
             }
             return captureInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.3)
           }
@@ -403,9 +400,9 @@ Item {
 
               Text {
                 visible: !captureInput.text
-                text: "e.g. . Review design ! @tomorrow :ui: or ? Fresh idea"
+                text: "Type . todo, / work, /. wait, ? idea, - note, ! urgent, @date, :tag:..."
                 color: Color.muted
-                opacity: 0.6
+                opacity: 0.55
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.title
                 anchors.fill: parent
@@ -448,24 +445,24 @@ Item {
               color: {
                 if (!captureModal.detected) return "transparent"
                 var st = captureModal.detected.status
-                if (st === "todo") return Util.alpha("#38bdf8", 0.2)
-                if (st === "working") return Util.alpha("#f59e0b", 0.2)
-                if (st === "waiting") return Util.alpha("#a855f7", 0.2)
-                if (st === "done") return Util.alpha("#10b981", 0.2)
-                if (st === "cancelled") return Util.alpha("#94a3b8", 0.2)
+                if (st === "todo") return Util.alpha("#f94dff", 0.2)
+                if (st === "working") return Util.alpha("#f1fc79", 0.2)
+                if (st === "waiting") return Util.alpha("#987afb", 0.2)
+                if (st === "done") return Util.alpha("#37f499", 0.2)
+                if (st === "cancelled") return Util.alpha("#5f6b8a", 0.2)
                 if (st === "idea") return Util.alpha("#ec4899", 0.2)
-                return Util.alpha(root.foreground, 0.15)
+                return Util.alpha("#04d1f9", 0.2)
               }
               border.color: {
                 if (!captureModal.detected) return "transparent"
                 var st = captureModal.detected.status
-                if (st === "todo") return "#38bdf8"
-                if (st === "working") return "#f59e0b"
-                if (st === "waiting") return "#a855f7"
-                if (st === "done") return "#10b981"
-                if (st === "cancelled") return "#94a3b8"
+                if (st === "todo") return "#f94dff"
+                if (st === "working") return "#f1fc79"
+                if (st === "waiting") return "#987afb"
+                if (st === "done") return "#37f499"
+                if (st === "cancelled") return "#5f6b8a"
                 if (st === "idea") return "#ec4899"
-                return root.foreground
+                return "#04d1f9"
               }
               border.width: 1
 
@@ -487,13 +484,13 @@ Item {
                 color: {
                   if (!captureModal.detected) return root.foreground
                   var st = captureModal.detected.status
-                  if (st === "todo") return "#38bdf8"
-                  if (st === "working") return "#f59e0b"
-                  if (st === "waiting") return "#a855f7"
-                  if (st === "done") return "#10b981"
-                  if (st === "cancelled") return "#94a3b8"
+                  if (st === "todo") return "#f94dff"
+                  if (st === "working") return "#f1fc79"
+                  if (st === "waiting") return "#987afb"
+                  if (st === "done") return "#37f499"
+                  if (st === "cancelled") return "#5f6b8a"
                   if (st === "idea") return "#ec4899"
-                  return root.foreground
+                  return "#04d1f9"
                 }
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
@@ -507,15 +504,15 @@ Item {
               height: Style.space(20)
               width: Style.space(68)
               radius: Style.space(4)
-              color: Util.alpha(Color.urgent, 0.2)
-              border.color: Color.urgent
+              color: Util.alpha("#f16c75", 0.2)
+              border.color: "#f16c75"
               border.width: 1
               anchors.verticalCenter: parent.verticalCenter
 
               Text {
                 anchors.centerIn: parent
                 text: "! Urgent"
-                color: Color.urgent
+                color: "#f16c75"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -584,15 +581,15 @@ Item {
               height: Style.space(24)
               width: p1Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha("#38bdf8", 0.35) : Util.alpha("#38bdf8", 0.12)
-              border.color: isCurrent ? "#38bdf8" : Util.alpha("#38bdf8", 0.3)
+              color: isCurrent ? Util.alpha("#f94dff", 0.35) : Util.alpha("#f94dff", 0.12)
+              border.color: isCurrent ? "#f94dff" : Util.alpha("#f94dff", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p1Text
                 anchors.centerIn: parent
                 text: ". Todo"
-                color: "#38bdf8"
+                color: "#f94dff"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -611,15 +608,15 @@ Item {
               height: Style.space(24)
               width: p2Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha("#f59e0b", 0.35) : Util.alpha("#f59e0b", 0.12)
-              border.color: isCurrent ? "#f59e0b" : Util.alpha("#f59e0b", 0.3)
+              color: isCurrent ? Util.alpha("#f1fc79", 0.35) : Util.alpha("#f1fc79", 0.12)
+              border.color: isCurrent ? "#f1fc79" : Util.alpha("#f1fc79", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p2Text
                 anchors.centerIn: parent
                 text: "/ Work"
-                color: "#f59e0b"
+                color: "#f1fc79"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -638,15 +635,15 @@ Item {
               height: Style.space(24)
               width: p3Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha("#a855f7", 0.35) : Util.alpha("#a855f7", 0.12)
-              border.color: isCurrent ? "#a855f7" : Util.alpha("#a855f7", 0.3)
+              color: isCurrent ? Util.alpha("#987afb", 0.35) : Util.alpha("#987afb", 0.12)
+              border.color: isCurrent ? "#987afb" : Util.alpha("#987afb", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p3Text
                 anchors.centerIn: parent
                 text: "/. Wait"
-                color: "#a855f7"
+                color: "#987afb"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -665,15 +662,15 @@ Item {
               height: Style.space(24)
               width: pxText.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha("#10b981", 0.35) : Util.alpha("#10b981", 0.12)
-              border.color: isCurrent ? "#10b981" : Util.alpha("#10b981", 0.3)
+              color: isCurrent ? Util.alpha("#37f499", 0.35) : Util.alpha("#37f499", 0.12)
+              border.color: isCurrent ? "#37f499" : Util.alpha("#37f499", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: pxText
                 anchors.centerIn: parent
                 text: "x Done"
-                color: "#10b981"
+                color: "#37f499"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -692,15 +689,15 @@ Item {
               height: Style.space(24)
               width: p6Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha("#94a3b8", 0.35) : Util.alpha("#94a3b8", 0.12)
-              border.color: isCurrent ? "#94a3b8" : Util.alpha("#94a3b8", 0.3)
+              color: isCurrent ? Util.alpha("#5f6b8a", 0.35) : Util.alpha("#5f6b8a", 0.12)
+              border.color: isCurrent ? "#5f6b8a" : Util.alpha("#5f6b8a", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p6Text
                 anchors.centerIn: parent
                 text: "z Cancel"
-                color: "#94a3b8"
+                color: "#5f6b8a"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -746,15 +743,15 @@ Item {
               height: Style.space(24)
               width: p5Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha(root.foreground, 0.25) : Util.alpha(root.foreground, 0.08)
-              border.color: isCurrent ? root.foreground : Util.alpha(root.border, 0.3)
+              color: isCurrent ? Util.alpha("#04d1f9", 0.3) : Util.alpha("#04d1f9", 0.1)
+              border.color: isCurrent ? "#04d1f9" : Util.alpha("#04d1f9", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: p5Text
                 anchors.centerIn: parent
                 text: "- Note"
-                color: root.foreground
+                color: "#04d1f9"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -787,15 +784,15 @@ Item {
               height: Style.space(24)
               width: m1Text.implicitWidth + Style.space(12)
               radius: Style.space(4)
-              color: isCurrent ? Util.alpha(Color.urgent, 0.35) : Util.alpha(Color.urgent, 0.12)
-              border.color: isCurrent ? Color.urgent : Util.alpha(Color.urgent, 0.3)
+              color: isCurrent ? Util.alpha("#f16c75", 0.35) : Util.alpha("#f16c75", 0.12)
+              border.color: isCurrent ? "#f16c75" : Util.alpha("#f16c75", 0.3)
               border.width: isCurrent ? 2 : 1
 
               Text {
                 id: m1Text
                 anchors.centerIn: parent
                 text: "! Urgent"
-                color: Color.urgent
+                color: "#f16c75"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.caption
                 font.bold: true
@@ -863,62 +860,62 @@ Item {
         }
 
         // Action Buttons Row
-        Row {
+        Item {
           width: parent.width
           height: Style.space(34)
-          spacing: Style.space(10)
 
-          Item {
-            width: Math.max(0, parent.width - Style.space(240))
-            height: 1
-          }
+          Row {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(10)
 
-          // Cancel Button
-          Rectangle {
-            height: Style.space(32)
-            width: Style.space(100)
-            radius: root.cornerRadius
-            color: Util.alpha(root.foreground, 0.08)
+            // Cancel Button
+            Rectangle {
+              height: Style.space(32)
+              width: Style.space(90)
+              radius: root.cornerRadius
+              color: Util.alpha(root.foreground, 0.08)
 
-            Text {
-              anchors.centerIn: parent
-              text: "Cancel"
-              color: root.foreground
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.subtitle
+              Text {
+                anchors.centerIn: parent
+                text: "Cancel"
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.subtitle
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.close()
+              }
             }
 
-            MouseArea {
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              onClicked: root.close()
-            }
-          }
+            // Save Button
+            Rectangle {
+              height: Style.space(32)
+              width: Style.space(120)
+              radius: root.cornerRadius
+              color: Color.accent
 
-          // Save Button
-          Rectangle {
-            height: Style.space(32)
-            width: Style.space(120)
-            radius: root.cornerRadius
-            color: Color.accent
+              Text {
+                anchors.centerIn: parent
+                text: "Save Task"
+                color: Color.background
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.subtitle
+                font.bold: true
+              }
 
-            Text {
-              anchors.centerIn: parent
-              text: "Save Task"
-              color: Color.background
-              font.family: root.fontFamily
-              font.pixelSize: Style.font.subtitle
-              font.bold: true
-            }
-
-            MouseArea {
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              onClicked: {
-                if (captureInput.text.trim()) {
-                  root.addNewItem(captureInput.text)
-                  captureInput.text = ""
-                  root.close()
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                  if (captureInput.text.trim()) {
+                    root.addNewItem(captureInput.text)
+                    captureInput.text = ""
+                    root.close()
+                  }
                 }
               }
             }
@@ -935,7 +932,7 @@ Item {
       visible: root.viewMode !== "capture"
       width: root.modalWidth
       height: root.modalHeight
-      radius: root.cornerRadius + Style.space(4)
+      radius: root.cornerRadius + Style.space(6)
       anchors.centerIn: parent
       color: root.background
       borderSpec: root.borderSpec
@@ -1000,6 +997,15 @@ Item {
                   root.cycleItemStatusAndFollow(curTask.id, 1)
                 }
               }
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lTypeSp = root.viewMode === "notes" ? "Note" : "Idea"
+              var lStSp = root.viewMode === "notes" ? "note" : "idea"
+              var listSp = root.getFilteredList(lTypeSp, lStSp)
+              var itSp = listSp[root.selectedCardIndex] || listSp[0]
+              if (itSp) {
+                root.updateStatusAndFollow(itSp.id, "todo")
+                root.viewMode = "kanban"
+              }
             }
             event.accepted = true
           } else if (event.key === Qt.Key_X || event.key === Qt.Key_D) {
@@ -1024,6 +1030,14 @@ Item {
               var curTaskDel = root.getSelectedTask()
               if (curTaskDel) {
                 root.deleteItem(curTaskDel.id)
+              }
+            } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+              var lTypeDel = root.viewMode === "notes" ? "Note" : "Idea"
+              var lStDel = root.viewMode === "notes" ? "note" : "idea"
+              var listDel = root.getFilteredList(lTypeDel, lStDel)
+              var itDel = listDel[root.selectedCardIndex] || listDel[0]
+              if (itDel) {
+                root.deleteItem(itDel.id)
               }
             }
             event.accepted = true
@@ -1133,19 +1147,19 @@ Item {
         spacing: Style.space(12)
 
         // --- Header Bar ---
-        Row {
+        Item {
           width: parent.width
           height: Style.space(38)
-          spacing: Style.space(12)
 
-          // Brand
+          // Left: Brand
           Row {
-            spacing: Style.space(8)
+            anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(8)
 
             Rectangle {
-              width: Style.space(30)
-              height: Style.space(30)
+              width: Style.space(32)
+              height: Style.space(32)
               radius: Style.space(6)
               color: Util.alpha(Color.accent, 0.18)
               anchors.verticalCenter: parent.verticalCenter
@@ -1170,10 +1184,10 @@ Item {
             }
           }
 
-          // Tabs Switcher
+          // Center: Segmented Navigation Tabs
           Row {
+            anchors.centerIn: parent
             spacing: Style.space(4)
-            anchors.verticalCenter: parent.verticalCenter
 
             // Kanban Tab
             Rectangle {
@@ -1181,6 +1195,8 @@ Item {
               width: tabKanbanText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
               color: root.viewMode === "kanban" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
+              border.color: root.viewMode === "kanban" ? Color.accent : "transparent"
+              border.width: 1
 
               Text {
                 id: tabKanbanText
@@ -1205,6 +1221,8 @@ Item {
               width: tabNotesText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
               color: root.viewMode === "notes" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
+              border.color: root.viewMode === "notes" ? "#04d1f9" : "transparent"
+              border.width: 1
 
               Text {
                 id: tabNotesText
@@ -1229,6 +1247,8 @@ Item {
               width: tabIdeasText.implicitWidth + Style.space(22)
               radius: root.cornerRadius
               color: root.viewMode === "ideas" ? root.selectedBackground : Util.alpha(root.foreground, 0.05)
+              border.color: root.viewMode === "ideas" ? "#ec4899" : "transparent"
+              border.width: 1
 
               Text {
                 id: tabIdeasText
@@ -1248,145 +1268,144 @@ Item {
             }
           }
 
-          Item {
-            width: Math.max(0, parent.width - Style.space(760))
-            height: 1
-          }
-
-          // Search Field
-          Rectangle {
-            width: Style.space(220)
-            height: Style.space(32)
-            radius: root.cornerRadius
-            color: Util.alpha(root.foreground, 0.06)
-            border.color: searchInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.25)
-            border.width: Style.normalBorderWidth
+          // Right: Search & Actions
+          Row {
+            anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(8)
 
-            Row {
-              anchors.fill: parent
-              anchors.leftMargin: Style.space(8)
-              anchors.rightMargin: Style.space(8)
-              spacing: Style.space(6)
+            // Search Field
+            Rectangle {
+              width: Style.space(200)
+              height: Style.space(32)
+              radius: root.cornerRadius
+              color: Util.alpha(root.foreground, 0.06)
+              border.color: searchInput.activeFocus ? Color.accent : Util.alpha(root.border, 0.25)
+              border.width: Style.normalBorderWidth
 
-              Text {
-                text: "󰍉"
-                color: Color.muted
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.body
-                anchors.verticalCenter: parent.verticalCenter
-              }
+              Row {
+                anchors.fill: parent
+                anchors.leftMargin: Style.space(8)
+                anchors.rightMargin: Style.space(8)
+                spacing: Style.space(6)
 
-              TextInput {
-                id: searchInput
-                width: parent.width - Style.space(40)
-                color: root.foreground
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.body
-                anchors.verticalCenter: parent.verticalCenter
-                clip: true
-                text: root.filterText
-                onTextChanged: root.filterText = text
+                Text {
+                  text: "󰍉"
+                  color: Color.muted
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.body
+                  anchors.verticalCenter: parent.verticalCenter
+                }
 
-                Keys.onEscapePressed: function(event) {
-                  if (text) {
-                    text = ""
-                  } else {
-                    keyCatcher.forceActiveFocus()
+                TextInput {
+                  id: searchInput
+                  width: parent.width - Style.space(40)
+                  color: root.foreground
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.body
+                  anchors.verticalCenter: parent.verticalCenter
+                  clip: true
+                  text: root.filterText
+                  onTextChanged: root.filterText = text
+
+                  Keys.onEscapePressed: function(event) {
+                    if (text) {
+                      text = ""
+                    } else {
+                      keyCatcher.forceActiveFocus()
+                    }
+                    event.accepted = true
                   }
-                  event.accepted = true
+
+                  Text {
+                    visible: !searchInput.text
+                    text: "Filter (/)..."
+                    color: Color.muted
+                    opacity: 0.6
+                    font.family: root.fontFamily
+                    font.pixelSize: Style.font.body
+                    anchors.fill: parent
+                    verticalAlignment: Text.AlignVCenter
+                  }
+                }
+
+                // Clear button
+                Text {
+                  visible: searchInput.text.length > 0
+                  text: "✕"
+                  color: Color.muted
+                  font.pixelSize: Style.font.caption
+                  anchors.verticalCenter: parent.verticalCenter
+                  MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: searchInput.text = ""
+                  }
+                }
+              }
+            }
+
+            // + New Item Button
+            Rectangle {
+              height: Style.space(32)
+              width: newItemBtnText.implicitWidth + Style.space(20)
+              radius: root.cornerRadius
+              color: Color.accent
+
+              Row {
+                id: newItemBtnText
+                anchors.centerIn: parent
+                spacing: Style.space(4)
+
+                Text {
+                  text: "+"
+                  color: Color.background
+                  font.family: root.fontFamily
+                  font.pixelSize: Style.font.subtitle
+                  font.bold: true
                 }
 
                 Text {
-                  visible: !searchInput.text
-                  text: "Filter (/)..."
-                  color: Color.muted
-                  opacity: 0.6
+                  text: "New (N)"
+                  color: Color.background
                   font.family: root.fontFamily
-                  font.pixelSize: Style.font.body
-                  anchors.fill: parent
-                  verticalAlignment: Text.AlignVCenter
+                  font.pixelSize: Style.font.subtitle
+                  font.bold: true
                 }
               }
 
-              // Clear button
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                  root.viewMode = "capture"
+                  Qt.callLater(function() {
+                    captureInput.text = ""
+                    captureInput.forceActiveFocus()
+                  })
+                }
+              }
+            }
+
+            // Close button
+            Rectangle {
+              height: Style.space(32)
+              width: Style.space(32)
+              radius: root.cornerRadius
+              color: Util.alpha(root.foreground, 0.08)
+
               Text {
-                visible: searchInput.text.length > 0
+                anchors.centerIn: parent
                 text: "✕"
-                color: Color.muted
-                font.pixelSize: Style.font.caption
-                anchors.verticalCenter: parent.verticalCenter
-                MouseArea {
-                  anchors.fill: parent
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: searchInput.text = ""
-                }
-              }
-            }
-          }
-
-          // + New Item Button
-          Rectangle {
-            height: Style.space(32)
-            width: newItemBtnText.implicitWidth + Style.space(20)
-            radius: root.cornerRadius
-            color: Color.accent
-            anchors.verticalCenter: parent.verticalCenter
-
-            Row {
-              id: newItemBtnText
-              anchors.centerIn: parent
-              spacing: Style.space(4)
-
-              Text {
-                text: "+"
-                color: Color.background
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.subtitle
-                font.bold: true
+                color: root.foreground
+                font.pixelSize: Style.font.body
               }
 
-              Text {
-                text: "New (N)"
-                color: Color.background
-                font.family: root.fontFamily
-                font.pixelSize: Style.font.subtitle
-                font.bold: true
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.close()
               }
-            }
-
-            MouseArea {
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              onClicked: {
-                root.viewMode = "capture"
-                Qt.callLater(function() {
-                  captureInput.text = ""
-                  captureInput.forceActiveFocus()
-                })
-              }
-            }
-          }
-
-          // Close button
-          Rectangle {
-            height: Style.space(32)
-            width: Style.space(32)
-            radius: root.cornerRadius
-            color: Util.alpha(root.foreground, 0.08)
-            anchors.verticalCenter: parent.verticalCenter
-
-            Text {
-              anchors.centerIn: parent
-              text: "✕"
-              color: root.foreground
-              font.pixelSize: Style.font.body
-            }
-
-            MouseArea {
-              anchors.fill: parent
-              cursorShape: Qt.PointingHandCursor
-              onClicked: root.close()
             }
           }
         }
@@ -1404,7 +1423,7 @@ Item {
             // Top: 5 Kanban Columns
             Row {
               width: parent.width
-              height: parent.height - Style.space(120)
+              height: parent.height - Style.space(105)
               spacing: Style.space(12)
 
               // Column 1: Todo
@@ -1473,10 +1492,10 @@ Item {
               }
             }
 
-            // Bottom: Active Task Preview & Shortcut Bar
+            // Bottom: Active Task Preview & Shortcut Bar HUD
             Rectangle {
               width: parent.width
-              height: Style.space(110)
+              height: Style.space(95)
               radius: root.cornerRadius
               color: Util.alpha(Color.menu.background, 0.7)
               border.color: Util.alpha(Color.menu.border, 0.3)
@@ -1553,14 +1572,14 @@ Item {
                     height: Style.space(22)
                     width: Style.space(68)
                     radius: Style.space(4)
-                    color: Util.alpha(Color.urgent, 0.2)
-                    border.color: Color.urgent
+                    color: Util.alpha("#f16c75", 0.2)
+                    border.color: "#f16c75"
                     border.width: 1
 
                     Text {
                       anchors.centerIn: parent
                       text: "! Urgent"
-                      color: Color.urgent
+                      color: "#f16c75"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
                       font.bold: true
@@ -1586,7 +1605,7 @@ Item {
                   visible: !parent.parent.activeTask
 
                   Text {
-                    text: "󰄲 SPAI Kanban Navigator"
+                    text: "󰄲 SPAI Kanban Navigator — Select a task with ↑/↓"
                     color: Color.accent
                     font.family: root.fontFamily
                     font.pixelSize: Style.font.title
@@ -1618,7 +1637,7 @@ Item {
                     Text {
                       id: s1Text
                       anchors.centerIn: parent
-                      text: "Space Cycle Status"
+                      text: "Space Next Stage"
                       color: Color.accent
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -1682,13 +1701,15 @@ Item {
                     height: Style.space(22)
                     width: s5Text.implicitWidth + Style.space(12)
                     radius: Style.space(4)
-                    color: Util.alpha(Color.urgent, 0.1)
+                    color: Util.alpha("#f16c75", 0.12)
+                    border.color: Util.alpha("#f16c75", 0.25)
+                    border.width: 1
 
                     Text {
                       id: s5Text
                       anchors.centerIn: parent
                       text: "Del Remove"
-                      color: Color.urgent
+                      color: "#f16c75"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
                     }
@@ -1812,14 +1833,14 @@ Item {
                       height: Style.space(22)
                       width: Style.space(22)
                       radius: Style.space(4)
-                      color: Util.alpha(Color.urgent, 0.15)
-                      border.color: Util.alpha(Color.urgent, 0.3)
+                      color: Util.alpha("#f16c75", 0.15)
+                      border.color: Util.alpha("#f16c75", 0.3)
                       border.width: 1
 
                       Text {
                         anchors.centerIn: parent
                         text: "✕"
-                        color: Color.urgent
+                        color: "#f16c75"
                         font.pixelSize: Style.font.caption
                         font.bold: true
                       }
@@ -2001,14 +2022,14 @@ Item {
                       height: Style.space(22)
                       width: Style.space(22)
                       radius: Style.space(4)
-                      color: Util.alpha(Color.urgent, 0.15)
-                      border.color: Util.alpha(Color.urgent, 0.3)
+                      color: Util.alpha("#f16c75", 0.15)
+                      border.color: Util.alpha("#f16c75", 0.3)
                       border.width: 1
 
                       Text {
                         anchors.centerIn: parent
                         text: "✕"
-                        color: Color.urgent
+                        color: "#f16c75"
                         font.pixelSize: Style.font.caption
                         font.bold: true
                       }

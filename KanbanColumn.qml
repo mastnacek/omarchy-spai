@@ -15,9 +15,9 @@ Rectangle {
 
   readonly property var cardList: rootView ? rootView.getFilteredList(root.columnType, root.columnStatus) : []
 
-  radius: Style.cornerRadius
-  color: Util.alpha(Color.menu.background, 0.6)
-  border.color: root.isActive ? root.badgeColor : Util.alpha(root.badgeColor, 0.3)
+  radius: Style.cornerRadius + 2
+  color: Util.alpha(Color.menu.background, 0.55)
+  border.color: root.isActive ? root.badgeColor : Util.alpha(root.badgeColor, 0.22)
   border.width: root.isActive ? Style.space(2) : Style.normalBorderWidth
 
   Column {
@@ -25,28 +25,28 @@ Rectangle {
     anchors.margins: Style.space(10)
     spacing: Style.space(10)
 
-    // Column Header (immune to overlap via anchors)
+    // Column Header
     Item {
       width: parent.width
       height: Style.space(28)
 
-      // Left Header content: Dot + Title + Count badge
+      // Left Header: Dot + Uppercase Title + Count Badge
       Row {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         spacing: Style.space(8)
 
-        // Accent color dot
+        // Accent indicator circle
         Rectangle {
-          width: Style.space(10)
-          height: Style.space(10)
-          radius: Style.space(5)
+          width: Style.space(9)
+          height: Style.space(9)
+          radius: Style.space(4.5)
           color: root.badgeColor
           anchors.verticalCenter: parent.verticalCenter
         }
 
         Text {
-          text: root.title
+          text: root.title.toUpperCase()
           color: root.isActive ? root.badgeColor : Color.menu.text
           font.family: Style.font.menuFamily
           font.pixelSize: Style.font.subtitle
@@ -59,8 +59,8 @@ Rectangle {
           height: Style.space(20)
           width: countText.implicitWidth + Style.space(12)
           radius: Style.space(10)
-          color: Util.alpha(root.badgeColor, 0.18)
-          border.color: Util.alpha(root.badgeColor, 0.4)
+          color: Util.alpha(root.badgeColor, 0.16)
+          border.color: Util.alpha(root.badgeColor, 0.35)
           border.width: 1
           anchors.verticalCenter: parent.verticalCenter
 
@@ -76,15 +76,15 @@ Rectangle {
         }
       }
 
-      // Right Header content: + Button
+      // Right Header: + Add Button
       Rectangle {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         height: Style.space(24)
         width: Style.space(24)
         radius: Style.space(4)
-        color: Util.alpha(root.badgeColor, 0.15)
-        border.color: Util.alpha(root.badgeColor, 0.3)
+        color: Util.alpha(root.badgeColor, 0.12)
+        border.color: Util.alpha(root.badgeColor, 0.25)
         border.width: 1
 
         Text {
@@ -119,7 +119,7 @@ Rectangle {
     Rectangle {
       width: parent.width
       height: 1
-      color: Util.alpha(root.badgeColor, 0.25)
+      color: Util.alpha(root.badgeColor, 0.2)
     }
 
     // Card List

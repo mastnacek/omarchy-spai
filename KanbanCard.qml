@@ -13,17 +13,18 @@ Rectangle {
   property color statusColor: Color.accent
 
   readonly property bool isDone: cardData && cardData.status === "done"
+  readonly property bool isCancelled: cardData && cardData.status === "cancelled"
   readonly property bool isUrgent: cardData && cardData.priority === "high"
 
   height: cardContent.implicitHeight + Style.space(18)
   radius: Style.cornerRadius
   color: root.isSelected
-    ? Util.alpha(root.statusColor, 0.18)
-    : (cardHover.containsMouse ? Util.alpha(Color.menu.background, 1.0) : Util.alpha(Color.menu.background, 0.85))
+    ? Util.alpha(root.statusColor, 0.15)
+    : (cardHover.containsMouse ? Util.alpha(Color.menu.background, 0.98) : Util.alpha(Color.menu.background, 0.78))
   border.color: root.isSelected
     ? root.statusColor
-    : (isUrgent ? Util.alpha(Color.urgent, 0.8) : (cardHover.containsMouse ? root.statusColor : Util.alpha(root.statusColor, 0.25)))
-  border.width: root.isSelected || isUrgent || cardHover.containsMouse ? Style.space(1.5) : Style.normalBorderWidth
+    : (isUrgent ? Util.alpha("#f16c75", 0.7) : (cardHover.containsMouse ? Util.alpha(root.statusColor, 0.5) : Util.alpha(Color.menu.border, 0.2)))
+  border.width: root.isSelected ? 2 : (cardHover.containsMouse ? 1.5 : 1)
 
   MouseArea {
     id: cardHover
@@ -41,27 +42,38 @@ Rectangle {
   Column {
     id: cardContent
     anchors.fill: parent
-    anchors.margins: Style.space(9)
-    spacing: Style.space(7)
+    anchors.margins: Style.space(10)
+    spacing: Style.space(8)
 
-    // Top: Status Glyph + Title + Priority Mark
+    // Top: Status Dot + Title + Priority Mark
     Row {
       width: parent.width
-      spacing: Style.space(6)
+      spacing: Style.space(8)
+
+      // Status indicator dot
+      Rectangle {
+        width: Style.space(7)
+        height: Style.space(7)
+        radius: Style.space(3.5)
+        color: root.statusColor
+        anchors.verticalCenter: parent.verticalCenter
+      }
 
       // Urgent icon if priority: high
       Rectangle {
         visible: root.isUrgent
         height: Style.space(18)
         width: Style.space(18)
-        radius: Style.space(9)
-        color: Color.urgent
+        radius: Style.space(4)
+        color: Util.alpha("#f16c75", 0.2)
+        border.color: "#f16c75"
+        border.width: 1
         anchors.verticalCenter: parent.verticalCenter
 
         Text {
           anchors.centerIn: parent
           text: "!"
-          color: Color.background
+          color: "#f16c75"
           font.bold: true
           font.pixelSize: Style.font.caption
         }
@@ -69,12 +81,14 @@ Rectangle {
 
       Text {
         text: root.cardData ? root.cardData.title : ""
-        color: root.isDone ? Color.muted : (root.isSelected ? root.statusColor : Color.menu.text)
+        color: (root.isDone || root.isCancelled)
+          ? Color.muted
+          : (root.isSelected ? root.statusColor : Color.menu.text)
         font.family: Style.font.menuFamily
         font.pixelSize: Style.font.body
-        font.strikeout: root.isDone
-        font.bold: !root.isDone || root.isSelected
-        width: parent.width - (root.isUrgent ? Style.space(24) : 0)
+        font.strikeout: root.isDone || root.isCancelled
+        font.bold: !root.isDone && !root.isCancelled || root.isSelected
+        width: parent.width - (root.isUrgent ? Style.space(34) : Style.space(15))
         wrapMode: Text.Wrap
       }
     }
@@ -91,7 +105,7 @@ Rectangle {
         height: Style.space(20)
         width: deadlineText.implicitWidth + Style.space(12)
         radius: Style.space(4)
-        color: Util.alpha(Color.accent, 0.15)
+        color: Util.alpha(Color.accent, 0.12)
         border.color: Util.alpha(Color.accent, 0.3)
         border.width: 1
 
@@ -122,7 +136,9 @@ Rectangle {
           height: Style.space(20)
           width: tagText.implicitWidth + Style.space(10)
           radius: Style.space(4)
-          color: Util.alpha(Color.menu.text, 0.08)
+          color: Util.alpha(Color.menu.text, 0.06)
+          border.color: Util.alpha(Color.menu.text, 0.12)
+          border.width: 1
 
           Text {
             id: tagText
@@ -148,12 +164,14 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Style.space(6)
 
-        // Move Left
+        // Move Left Button
         Rectangle {
           height: Style.space(22)
           width: Style.space(22)
           radius: Style.space(4)
-          color: Util.alpha(Color.menu.text, 0.1)
+          color: Util.alpha(Color.menu.text, 0.08)
+          border.color: Util.alpha(Color.menu.text, 0.15)
+          border.width: 1
 
           Text {
             anchors.centerIn: parent
@@ -173,12 +191,14 @@ Rectangle {
           }
         }
 
-        // Move Right / Space
+        // Move Right / Space Button
         Rectangle {
           height: Style.space(22)
           width: Style.space(22)
           radius: Style.space(4)
-          color: Util.alpha(Color.menu.text, 0.1)
+          color: Util.alpha(Color.menu.text, 0.08)
+          border.color: Util.alpha(Color.menu.text, 0.15)
+          border.width: 1
 
           Text {
             anchors.centerIn: parent
@@ -198,12 +218,14 @@ Rectangle {
           }
         }
 
-        // Toggle Done
+        // Toggle Done Button
         Rectangle {
           height: Style.space(22)
           width: Style.space(22)
           radius: Style.space(4)
-          color: root.isDone ? Util.alpha("#37f499", 0.3) : Util.alpha(Color.menu.text, 0.1)
+          color: root.isDone ? Util.alpha("#37f499", 0.25) : Util.alpha(Color.menu.text, 0.08)
+          border.color: root.isDone ? "#37f499" : Util.alpha(Color.menu.text, 0.15)
+          border.width: 1
 
           Text {
             anchors.centerIn: parent
@@ -226,21 +248,21 @@ Rectangle {
         }
       }
 
-      // Right Action: Delete Button (Anchored to right, never cut off!)
+      // Right Action: Delete Button
       Rectangle {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         height: Style.space(22)
         width: Style.space(22)
         radius: Style.space(4)
-        color: Util.alpha(Color.urgent, 0.18)
-        border.color: Util.alpha(Color.urgent, 0.35)
+        color: Util.alpha("#f16c75", 0.15)
+        border.color: Util.alpha("#f16c75", 0.35)
         border.width: 1
 
         Text {
           anchors.centerIn: parent
           text: "✕"
-          color: Color.urgent
+          color: "#f16c75"
           font.pixelSize: Style.font.caption
           font.bold: true
         }
