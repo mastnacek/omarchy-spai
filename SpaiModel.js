@@ -48,13 +48,6 @@ function parseRawItem(rawText) {
       symbol = def.marker;
       content = text.slice(def.marker.length + 1).trim();
       break;
-    } else if (text.startsWith(def.marker)) {
-      if (def.marker === "/" && text.startsWith("/.")) continue;
-      type = def.type;
-      status = def.status;
-      symbol = def.marker;
-      content = text.slice(def.marker.length).trim();
-      break;
     }
   }
 
@@ -66,16 +59,26 @@ function parseRawItem(rawText) {
     content = content.replace(prioMatch, " ").trim();
   }
 
-  // Extract Deadline `@YYYY-MM-DD` or `@DD.MM.`
+  // Extract Deadline `@today`, `@tomorrow`, `@YYYY-MM-DD`, `@DD.MM.` or `@DD.MM.YYYY`
   let deadline = "";
   const deadlineRe =
-    /(?:^|\s)@(?:(\d{4}-\d{2}-\d{2})|(\d{1,2}\.\d{1,2}\.(?:\d{4})?))(?:\s|$)/;
+    /(?:^|\s)@(?:(today|dnes|tomorrow|zitra|zejtra)|(\d{4}-\d{2}-\d{2})|(\d{1,2}\.\d{1,2}\.(?:\d{4})?))(?:\s|$)/i;
   const deadMatch = content.match(deadlineRe);
   if (deadMatch) {
     if (deadMatch[1]) {
-      deadline = deadMatch[1];
+      const rel = deadMatch[1].toLowerCase();
+      const now = new Date();
+      if (rel === "tomorrow" || rel === "zitra" || rel === "zejtra") {
+        now.setDate(now.getDate() + 1);
+      }
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      deadline = `${y}-${m}-${d}`;
     } else if (deadMatch[2]) {
-      const parts = deadMatch[2].split(".").filter(Boolean);
+      deadline = deadMatch[2];
+    } else if (deadMatch[3]) {
+      const parts = deadMatch[3].split(".").filter(Boolean);
       const day = (parts[0] || "").padStart(2, "0");
       const month = (parts[1] || "").padStart(2, "0");
       const year = parts[2] || new Date().getFullYear().toString();

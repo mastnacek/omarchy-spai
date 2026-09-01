@@ -22,6 +22,7 @@ Item {
   property int selectedCardIndex: 0
 
   property var allItems: []
+  property var deletedUndoStack: []
   property var stats: ({ total: 0, todo: 0, working: 0, waiting: 0, done: 0, cancelled: 0, notes: 0, ideas: 0, pendingTotal: 0 })
 
   // Surface tokens
@@ -198,8 +199,39 @@ Item {
   }
 
   function deleteItem(id) {
+    var found = null
+    for (var i = 0; i < root.allItems.length; i++) {
+      if (root.allItems[i].id === id) {
+        found = root.allItems[i]
+        break
+      }
+    }
+    if (found) {
+      root.deletedUndoStack.push({ item: found, viewMode: root.viewMode, status: found.status })
+    }
     root.allItems = SpaiModel.removeItem(root.allItems, id)
     root.saveData()
+  }
+
+  function undoLastDelete() {
+    if (root.deletedUndoStack.length === 0) return
+    var last = root.deletedUndoStack.pop()
+    if (last && last.item) {
+      root.allItems = SpaiModel.addItem(root.allItems, last.item)
+      root.saveData()
+      if (last.item.type === "Note") {
+        root.viewMode = "notes"
+      } else if (last.item.type === "Idea") {
+        root.viewMode = "ideas"
+      } else {
+        root.viewMode = "kanban"
+        var statuses = ["todo", "working", "waiting", "done", "cancelled"]
+        var sIdx = statuses.indexOf(last.item.status)
+        if (sIdx !== -1) root.activeColumnIndex = sIdx
+      }
+      root.focusArea = "board"
+      root.selectedCardIndex = 0
+    }
   }
 
   function getFilteredList(typeFilter, statusFilter) {
@@ -212,6 +244,15 @@ Item {
     return root.getFilteredList("Todo", st)
   }
 
+  function getActiveViewList() {
+    if (root.viewMode === "notes") {
+      return root.getFilteredList("Note", "note")
+    } else if (root.viewMode === "ideas") {
+      return root.getFilteredList("Idea", "idea")
+    }
+    return root.getActiveColumnTasks()
+  }
+
   function getSelectedTask() {
     if (root.focusArea !== "board") return null
     var list = root.getActiveColumnTasks()
@@ -221,7 +262,7 @@ Item {
   }
 
   function clampSelection() {
-    var list = root.getActiveColumnTasks()
+    var list = root.getActiveViewList()
     if (list.length === 0) {
       root.selectedCardIndex = 0
     } else if (root.selectedCardIndex >= list.length) {
@@ -1139,6 +1180,9 @@ Item {
                 }
               }
               event.accepted = true
+            } else if (event.key === Qt.Key_U || (event.key === Qt.Key_Z && (event.modifiers & Qt.ControlModifier))) {
+              root.undoLastDelete()
+              event.accepted = true
             } else if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
               if (root.viewMode === "kanban") {
                 var curTaskDel = root.getSelectedTask()
@@ -1149,9 +1193,8 @@ Item {
                 var lTypeDel = root.viewMode === "notes" ? "Note" : "Idea"
                 var lStDel = root.viewMode === "notes" ? "note" : "idea"
                 var listDel = root.getFilteredList(lTypeDel, lStDel)
-                var itDel = listDel[root.selectedCardIndex] || listDel[0]
-                if (itDel) {
-                  root.deleteItem(itDel.id)
+                if (root.selectedCardIndex >= 0 && root.selectedCardIndex < listDel.length) {
+                  root.deleteItem(listDel[root.selectedCardIndex].id)
                 }
               }
               event.accepted = true
@@ -1919,6 +1962,33 @@ Item {
                       color: "#f1f5f9"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  // U Undo
+                  Rectangle {
+                    visible: root.deletedUndoStack.length > 0
+                    height: Style.space(22)
+                    width: sUText.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#f1fc79", 0.15)
+                    border.color: Util.alpha("#f1fc79", 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: sUText
+                      anchors.centerIn: parent
+                      text: "[U] Undo"
+                      color: "#f1fc79"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+
+                    MouseArea {
+                      anchors.fill: parent
+                      cursorShape: Qt.PointingHandCursor
+                      onClicked: root.undoLastDelete()
                     }
                   }
 

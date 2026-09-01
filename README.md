@@ -1,23 +1,21 @@
 # SPAI Tasks & Kanban for Omarchy
 
-A fast, keyboard-first task manager, Kanban board, notes & ideas tracker, and quick capture overlay for [Omarchy](https://omarchy.org/) desktop based on the **SPAI** standard syntax.
-
-![SPAI Omarchy Plugin Preview](preview.png)
+A fast, keyboard-first task manager, 5-column Kanban board, notes & ideas tracker, and quick capture overlay for [Omarchy](https://omarchy.org/) desktop based on the **SPAI** standard syntax.
 
 ---
 
 ## ✨ Features
 
-- 📋 **Kanban Board** with 4 interactive columns: `Todo` (`.`), `In Progress` (`/`), `Waiting` (`/.`), and `Done` (`x`).
-- ⚡ **Quick Capture Overlay**: Rapid capture modal summoned globally via `Ctrl + Alt + Space`.
-- 💡 **Notes & Ideas Hub**: Dedicated tabs for notes (`-`) and ideas (`?`) with 1-click conversion to tasks.
+- 📋 **5-Column Kanban Board**: `Todo` (`.`), `In Progress` (`/`), `Waiting` (`/.`), `Done` (`x` / `X`), and `Cancelled` (`z` / `Z`).
+- ⚡ **Quick Capture Overlay**: Rapid capture modal summoned globally via `Ctrl + Alt + Space` with live syntax detection.
+- 💡 **Notes & Ideas Hub**: Dedicated tabs for notes (`-`) and ideas (`?`) with 1-click & keyboard conversion to tasks.
 - 🎯 **SPAI Syntax Support**:
-  - Prefixes: `.` (todo), `/` (working), `/.` (waiting), `x` (done), `-` (note), `?` (idea)
+  - Prefixes: `.` (todo), `/` (working), `/.` (waiting), `x` (done), `z` (cancelled), `-` (note), `?` (idea)
   - Priority: `!` (Urgent / High Priority)
-  - Deadlines: `@YYYY-MM-DD` or `@DD.MM.`
+  - Deadlines: `@today`, `@tomorrow`, `@YYYY-MM-DD`, `@DD.MM.`, `@DD.MM.YYYY`
   - Tags: `:tag1:tag2:`
 - 📊 **Status Bar Widget**: Shows active pending task counter in the Omarchy bar.
-- ⌨️ **Full Keyboard Control**: Vim-style navigation, instant column switching, search filter, and quick actions.
+- ⌨️ **Full Keyboard Control**: Vim-style navigation, 2-tier spatial arrow navigation (`↑` to Tabs, `↓` to Board), instant status moves (`1..5`), spacebar rotation loop, and Undo (`U`).
 
 ---
 
@@ -25,14 +23,14 @@ A fast, keyboard-first task manager, Kanban board, notes & ideas tracker, and qu
 
 ### Global Hyprland Shortcuts
 
-Add these to `~/.config/hypr/bindings.conf`:
+Add these to `~/.config/hypr/bindings.lua`:
 
-```ini
-# SPAI Quick Capture
-bind = Control+Alt, Space, exec, omarchy-shell shell summon jara.spai '{"mode":"capture"}'
+```lua
+-- SPAI Quick Capture
+o.bind("CTRL + ALT + SPACE", "SPAI Quick Capture", "omarchy-shell shell toggle jara.spai '{\"mode\":\"capture\"}'")
 
-# SPAI Kanban Board
-bind = Control+Alt, K, exec, omarchy-shell shell summon jara.spai '{"mode":"kanban"}'
+-- SPAI Kanban Board
+o.bind("CTRL + ALT + K", "SPAI Kanban Board", "omarchy-shell shell toggle jara.spai '{\"mode\":\"kanban\"}'")
 ```
 
 ### In-App Shortcuts (Kanban / Notes / Ideas)
@@ -40,14 +38,20 @@ bind = Control+Alt, K, exec, omarchy-shell shell summon jara.spai '{"mode":"kanb
 | Key | Action |
 | --- | --- |
 | `Ctrl + Alt + Space` | Open Quick Capture modal |
+| `Space` | Rotate status to next stage / Convert note or idea to task |
+| `1` / `.` / `t` | Move task / convert to **Todo** |
+| `2` / `/` / `w` | Move task / convert to **Working** |
+| `3` / `/.` / `p` | Move task / convert to **Waiting** |
+| `4` / `x` / `d` | Move task / convert to **Done** |
+| `5` / `z` / `c` | Move task / convert to **Cancelled** |
+| `6` / `-` | Convert to **Note** / Switch to Notes tab |
+| `7` / `?` | Convert to **Idea** / Switch to Ideas tab |
+| `U` / `Ctrl + Z` | **Undo** last deletion |
+| `↑` / `↓` or `k` / `j` | Navigate cards (`↑` on top card switches to Tab navigation) |
+| `←` / `→` or `h` / `l` | Switch columns / switch tabs |
 | `N` or `A` | New Item / Quick Capture |
 | `/` | Focus search filter |
-| `1` / `2` / `3` / `4` | Jump to column (`Todo`, `In Progress`, `Waiting`, `Done`) |
-| `5` / `6` | Jump to `Notes` / `Ideas` tab |
-| `Tab` / `Shift + Tab` | Cycle active column |
-| `H` / `L` or `←` / `→` | Move card between columns |
-| `X` or `D` | Toggle card Done |
-| `Delete` | Delete selected card |
+| `Delete` / `Backspace` | Delete selected card |
 | `Esc` | Clear filter / Close overlay |
 
 ---
@@ -80,7 +84,6 @@ Validate the plugin against Omarchy specifications:
 
 ```bash
 omarchy plugin validate ~/.config/omarchy/plugins/jara.spai
-qmllint -I "$OMARCHY_PATH/shell" ~/.config/omarchy/plugins/jara.spai/BarWidget.qml
 ```
 
 ---
