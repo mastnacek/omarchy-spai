@@ -36,7 +36,7 @@ Item {
   property int contentMargin: Style.spacing.panelPadding
   property int contentSpacing: Style.spacing.md
 
-  property int modalWidth: Math.min(Style.space(1200), panel.width - Style.gapsOut * 2)
+  property int modalWidth: Math.min(Style.space(1280), panel.width - Style.gapsOut * 2)
   property int modalHeight: Math.min(Style.space(740), panel.height - Style.gapsOut * 2)
   property int captureWidth: Math.min(Style.space(660), panel.width - Style.gapsOut * 2)
   property alias captureInputText: captureInput.text
@@ -127,7 +127,7 @@ Item {
   }
 
   function getActiveColumnTasks() {
-    var statuses = ["todo", "working", "waiting", "done"]
+    var statuses = ["todo", "working", "waiting", "done", "cancelled"]
     var st = statuses[root.activeColumnIndex] || "todo"
     return root.getFilteredList("Todo", st)
   }
@@ -509,6 +509,32 @@ Item {
                 onClicked: root.insertTokenIntoCapture("- ", true)
               }
             }
+
+            // z Cancelled
+            Rectangle {
+              height: Style.space(24)
+              width: p6Text.implicitWidth + Style.space(12)
+              radius: Style.space(4)
+              color: Util.alpha("#94a3b8", 0.15)
+              border.color: Util.alpha("#94a3b8", 0.3)
+              border.width: 1
+
+              Text {
+                id: p6Text
+                anchors.centerIn: parent
+                text: "z Cancel"
+                color: "#94a3b8"
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+              }
+
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.insertTokenIntoCapture("z ", true)
+              }
+            }
           }
 
           // Modifier Buttons (!, @, :)
@@ -708,13 +734,13 @@ Item {
             event.accepted = true
           } else if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
             if (root.viewMode === "kanban") {
-              root.activeColumnIndex = (root.activeColumnIndex - 1 + 4) % 4
+              root.activeColumnIndex = (root.activeColumnIndex - 1 + 5) % 5
               root.clampSelection()
             }
             event.accepted = true
           } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
             if (root.viewMode === "kanban") {
-              root.activeColumnIndex = (root.activeColumnIndex + 1) % 4
+              root.activeColumnIndex = (root.activeColumnIndex + 1) % 5
               root.clampSelection()
             }
             event.accepted = true
@@ -748,6 +774,14 @@ Item {
               if (curTaskD) {
                 var nextSt = curTaskD.status === "done" ? "todo" : "done"
                 root.updateStatus(curTaskD.id, nextSt)
+              }
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_Z || event.key === Qt.Key_C) {
+            if (root.viewMode === "kanban") {
+              var curTaskZ = root.getSelectedTask()
+              if (curTaskZ) {
+                root.updateStatus(curTaskZ.id, "cancelled")
               }
             }
             event.accepted = true
@@ -788,17 +822,24 @@ Item {
             }
             event.accepted = true
           } else if (event.key === Qt.Key_5) {
-            root.viewMode = "notes"
+            if (root.viewMode === "kanban") {
+              var t5 = root.getSelectedTask()
+              if (t5) root.updateStatus(t5.id, "cancelled")
+              else root.activeColumnIndex = 4
+            }
             event.accepted = true
           } else if (event.key === Qt.Key_6) {
+            root.viewMode = "notes"
+            event.accepted = true
+          } else if (event.key === Qt.Key_7) {
             root.viewMode = "ideas"
             event.accepted = true
           } else if (event.key === Qt.Key_Tab) {
             if (root.viewMode === "kanban") {
               if (event.modifiers & Qt.ShiftModifier) {
-                root.activeColumnIndex = (root.activeColumnIndex + 3) % 4
+                root.activeColumnIndex = (root.activeColumnIndex + 4) % 5
               } else {
-                root.activeColumnIndex = (root.activeColumnIndex + 1) % 4
+                root.activeColumnIndex = (root.activeColumnIndex + 1) % 5
               }
               root.clampSelection()
             }
@@ -1081,7 +1122,7 @@ Item {
             anchors.fill: parent
             spacing: Style.space(10)
 
-            // Top: 4 Kanban Columns
+            // Top: 5 Kanban Columns
             Row {
               width: parent.width
               height: parent.height - Style.space(120)
@@ -1089,7 +1130,7 @@ Item {
 
               // Column 1: Todo
               KanbanColumn {
-                width: (parent.width - Style.space(36)) / 4
+                width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Todo"
                 columnStatus: "todo"
@@ -1102,7 +1143,7 @@ Item {
 
               // Column 2: In Progress
               KanbanColumn {
-                width: (parent.width - Style.space(36)) / 4
+                width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "In Progress"
                 columnStatus: "working"
@@ -1115,7 +1156,7 @@ Item {
 
               // Column 3: Waiting
               KanbanColumn {
-                width: (parent.width - Style.space(36)) / 4
+                width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Waiting"
                 columnStatus: "waiting"
@@ -1128,7 +1169,7 @@ Item {
 
               // Column 4: Done
               KanbanColumn {
-                width: (parent.width - Style.space(36)) / 4
+                width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Done"
                 columnStatus: "done"
@@ -1136,6 +1177,19 @@ Item {
                 badgeColor: "#10b981"
                 columnIndex: 3
                 isActive: root.activeColumnIndex === 3
+                rootView: root
+              }
+
+              // Column 5: Cancelled
+              KanbanColumn {
+                width: (parent.width - Style.space(48)) / 5
+                height: parent.height
+                title: "Cancelled"
+                columnStatus: "cancelled"
+                columnType: "Todo"
+                badgeColor: "#94a3b8"
+                columnIndex: 4
+                isActive: root.activeColumnIndex === 4
                 rootView: root
               }
             }
@@ -1173,6 +1227,7 @@ Item {
                       if (st === "working") return Util.alpha("#f59e0b", 0.2)
                       if (st === "waiting") return Util.alpha("#a855f7", 0.2)
                       if (st === "done") return Util.alpha("#10b981", 0.2)
+                      if (st === "cancelled") return Util.alpha("#94a3b8", 0.2)
                       return Util.alpha(Color.accent, 0.2)
                     }
                     border.color: {
@@ -1181,6 +1236,7 @@ Item {
                       if (st === "working") return "#f59e0b"
                       if (st === "waiting") return "#a855f7"
                       if (st === "done") return "#10b981"
+                      if (st === "cancelled") return "#94a3b8"
                       return Color.accent
                     }
                     border.width: 1
@@ -1194,6 +1250,7 @@ Item {
                         if (st === "working") return "◐ WORKING"
                         if (st === "waiting") return "⏳ WAITING"
                         if (st === "done") return "✓ DONE"
+                        if (st === "cancelled") return "✗ CANCELLED"
                         return st.toUpperCase()
                       }
                       color: {
@@ -1202,6 +1259,7 @@ Item {
                         if (st === "working") return "#f59e0b"
                         if (st === "waiting") return "#a855f7"
                         if (st === "done") return "#10b981"
+                        if (st === "cancelled") return "#94a3b8"
                         return Color.accent
                       }
                       font.family: root.fontFamily
@@ -1306,7 +1364,7 @@ Item {
                     }
                   }
 
-                  // 1-4 Instant Column
+                  // 1-5 Instant Column
                   Rectangle {
                     height: Style.space(22)
                     width: s3Text.implicitWidth + Style.space(12)
@@ -1316,7 +1374,7 @@ Item {
                     Text {
                       id: s3Text
                       anchors.centerIn: parent
-                      text: "1..4 Set Status"
+                      text: "1..5 Set Status"
                       color: root.foreground
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption

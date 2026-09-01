@@ -168,7 +168,7 @@ function moveStatus(items, id, targetStatus) {
 }
 
 function cycleStatus(items, id, direction) {
-  const statuses = ["todo", "working", "waiting", "done"];
+  const statuses = ["todo", "working", "waiting", "done", "cancelled"];
   const list = items || [];
   for (let i = 0; i < list.length; i++) {
     if (list[i].id === id) {
@@ -208,6 +208,7 @@ function getStats(items) {
     working: 0,
     waiting: 0,
     done: 0,
+    cancelled: 0,
     notes: 0,
     ideas: 0,
     pendingTotal: 0,
@@ -220,6 +221,7 @@ function getStats(items) {
       else if (it.status === "working") stats.working++;
       else if (it.status === "waiting") stats.waiting++;
       else if (it.status === "done") stats.done++;
+      else if (it.status === "cancelled") stats.cancelled++;
 
       if (it.status !== "done" && it.status !== "cancelled") {
         stats.pendingTotal++;
