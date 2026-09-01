@@ -1073,6 +1073,15 @@ Item {
                   var nextSt = curTaskD.status === "done" ? "todo" : "done"
                   root.updateStatusAndFollow(curTaskD.id, nextSt)
                 }
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lTypeX = root.viewMode === "notes" ? "Note" : "Idea"
+                var lStX = root.viewMode === "notes" ? "note" : "idea"
+                var listX = root.getFilteredList(lTypeX, lStX)
+                var itX = listX[root.selectedCardIndex] || listX[0]
+                if (itX) {
+                  root.updateStatusAndFollow(itX.id, "done")
+                  root.viewMode = "kanban"
+                }
               }
               event.accepted = true
             } else if (event.key === Qt.Key_Z || event.key === Qt.Key_C) {
@@ -1080,6 +1089,15 @@ Item {
                 var curTaskZ = root.getSelectedTask()
                 if (curTaskZ) {
                   root.updateStatusAndFollow(curTaskZ.id, "cancelled")
+                }
+              } else if (root.viewMode === "notes" || root.viewMode === "ideas") {
+                var lTypeZ = root.viewMode === "notes" ? "Note" : "Idea"
+                var lStZ = root.viewMode === "notes" ? "note" : "idea"
+                var listZ = root.getFilteredList(lTypeZ, lStZ)
+                var itZ = listZ[root.selectedCardIndex] || listZ[0]
+                if (itZ) {
+                  root.updateStatusAndFollow(itZ.id, "cancelled")
+                  root.viewMode = "kanban"
                 }
               }
               event.accepted = true
@@ -1870,19 +1888,19 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Style.space(6)
 
-                    // Convert to Todo
+                    // Convert to Todo (Space)
                     Rectangle {
                       height: Style.space(22)
-                      width: nTodoText.implicitWidth + Style.space(10)
+                      width: nTodoText.implicitWidth + Style.space(12)
                       radius: Style.space(4)
-                      color: Util.alpha("#f94dff", 0.15)
-                      border.color: Util.alpha("#f94dff", 0.3)
+                      color: Util.alpha("#f94dff", 0.18)
+                      border.color: Util.alpha("#f94dff", 0.4)
                       border.width: 1
 
                       Text {
                         id: nTodoText
                         anchors.centerIn: parent
-                        text: "→ Todo"
+                        text: "Space ➔ Todo"
                         color: "#f94dff"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
@@ -2069,19 +2087,19 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: Style.space(6)
 
-                    // Convert to Todo
+                    // Convert to Todo (Space)
                     Rectangle {
                       height: Style.space(22)
-                      width: iTodoText.implicitWidth + Style.space(10)
+                      width: iTodoText.implicitWidth + Style.space(12)
                       radius: Style.space(4)
-                      color: Util.alpha("#f94dff", 0.15)
-                      border.color: Util.alpha("#f94dff", 0.3)
+                      color: Util.alpha("#f94dff", 0.18)
+                      border.color: Util.alpha("#f94dff", 0.4)
                       border.width: 1
 
                       Text {
                         id: iTodoText
                         anchors.centerIn: parent
-                        text: "→ Todo"
+                        text: "Space ➔ Todo"
                         color: "#f94dff"
                         font.family: root.fontFamily
                         font.pixelSize: Style.font.caption
