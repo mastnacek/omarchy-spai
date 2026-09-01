@@ -1,66 +1,70 @@
 // spai-storage.js - Native SPAI Markdown File Storage Manager for Omarchy & pi-spai
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
 
 const HOME = os.homedir();
-const SPAI_BASE_DIR = path.join(HOME, 'Documents', 'spai');
+const SPAI_BASE_DIR = path.join(HOME, "Documents", "spai");
 const SUBDIRS = {
-  Todo: path.join(SPAI_BASE_DIR, 'tasks'),
-  Note: path.join(SPAI_BASE_DIR, 'notes'),
-  Idea: path.join(SPAI_BASE_DIR, 'ideas')
+  Todo: path.join(SPAI_BASE_DIR, "tasks"),
+  Note: path.join(SPAI_BASE_DIR, "notes"),
+  Idea: path.join(SPAI_BASE_DIR, "ideas"),
 };
-const INDEX_PATH = path.join(SPAI_BASE_DIR, '.index.json');
+const INDEX_PATH = path.join(SPAI_BASE_DIR, ".index.json");
 
 function ensureDirectories() {
-  if (!fs.existsSync(SPAI_BASE_DIR)) fs.mkdirSync(SPAI_BASE_DIR, { recursive: true });
+  if (!fs.existsSync(SPAI_BASE_DIR))
+    fs.mkdirSync(SPAI_BASE_DIR, { recursive: true });
   for (const key of Object.keys(SUBDIRS)) {
-    if (!fs.existsSync(SUBDIRS[key])) fs.mkdirSync(SUBDIRS[key], { recursive: true });
+    if (!fs.existsSync(SUBDIRS[key]))
+      fs.mkdirSync(SUBDIRS[key], { recursive: true });
   }
 }
 
 function slugify(text) {
-  return (text || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50) || 'item';
+  return (
+    (text || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 50) || "item"
+  );
 }
 
 function formatDateTime(dateInput) {
-  const pad = (n) => n.toString().padStart(2, '0');
+  const pad = (n) => n.toString().padStart(2, "0");
   const d = dateInput ? new Date(dateInput) : new Date();
   if (Number.isNaN(d.getTime())) return formatDateTime(new Date());
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 function getSubdirForType(type) {
-  if (type === 'Note') return SUBDIRS.Note;
-  if (type === 'Idea') return SUBDIRS.Idea;
+  if (type === "Note") return SUBDIRS.Note;
+  if (type === "Idea") return SUBDIRS.Idea;
   return SUBDIRS.Todo;
 }
 
 function formatMarkdown(record) {
   const lines = [
-    '---',
-    `type: ${record.type || 'Todo'}`,
-    `title: "${(record.title || '').replace(/"/g, '\\"')}"`,
+    "---",
+    `type: ${record.type || "Todo"}`,
+    `title: "${(record.title || "").replace(/"/g, '\\"')}"`,
     `timestamp: ${record.timestamp || formatDateTime()}`,
-    `status: ${record.status || 'todo'}`,
-    'source: omarchy-spai'
+    `status: ${record.status || "todo"}`,
+    "source: omarchy-spai",
   ];
 
   if (record.tags && record.tags.length > 0) {
-    lines.push(`tags: [${record.tags.join(', ')}]`);
+    lines.push(`tags: [${record.tags.join(", ")}]`);
   }
 
   if (record.priority || record.deadline) {
-    lines.push('facets:');
+    lines.push("facets:");
     if (record.priority) lines.push(`  priority: ${record.priority}`);
     if (record.deadline) lines.push(`  deadline: ${record.deadline}`);
   }
@@ -69,34 +73,35 @@ function formatMarkdown(record) {
     lines.push(`spai_symbol: '${record.symbol}'`);
   }
 
-  lines.push('---');
-  lines.push('');
+  lines.push("---");
+  lines.push("");
   lines.push(`# ${record.id}: ${record.title}`);
-  lines.push('');
-  lines.push((record.raw || record.body || record.title || '').trim());
-  lines.push('');
+  lines.push("");
+  lines.push((record.raw || record.body || record.title || "").trim());
+  lines.push("");
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function parseMarkdownFile(filePath) {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
+    const content = fs.readFileSync(filePath, "utf8");
     const fileName = path.basename(filePath);
-    let yamlRaw = '';
+    let yamlRaw = "";
     let body = content;
 
-    if (content.startsWith('---\n') || content.startsWith('---\r\n')) {
-      const endFm = content.indexOf('\n---', 4);
+    if (content.startsWith("---\n") || content.startsWith("---\r\n")) {
+      const endFm = content.indexOf("\n---", 4);
       if (endFm !== -1) {
         yamlRaw = content.slice(4, endFm).trim();
         body = content.slice(endFm + 4).trimStart();
       }
     }
 
-    const titleMatch = body.match(/^#\s*(SPAI-\d+)?:\s*(.+)$/m) || body.match(/^#\s*(.+)$/m);
-    let id = 'SPAI-001';
-    let title = 'Untitled';
+    const titleMatch =
+      body.match(/^#\s*(SPAI-\d+)?:\s*(.+)$/m) || body.match(/^#\s*(.+)$/m);
+    let id = "SPAI-001";
+    let title = "Untitled";
 
     if (titleMatch) {
       if (titleMatch[1]) id = titleMatch[1].trim();
@@ -104,13 +109,13 @@ function parseMarkdownFile(filePath) {
       else if (titleMatch[1]) title = titleMatch[1].trim();
     }
 
-    let type = 'Todo';
-    let status = 'todo';
+    let type = "Todo";
+    let status = "todo";
     let timestamp = formatDateTime();
-    let priority = 'normal';
-    let deadline = '';
+    let priority = "normal";
+    let deadline = "";
     let tags = [];
-    let symbol = '.';
+    let symbol = ".";
 
     if (yamlRaw) {
       const typeM = yamlRaw.match(/^type:\s*(.+)$/m);
@@ -124,7 +129,10 @@ function parseMarkdownFile(filePath) {
 
       const tagsM = yamlRaw.match(/^tags:\s*\[(.*)\]/m);
       if (tagsM) {
-        tags = tagsM[1].split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+        tags = tagsM[1]
+          .split(",")
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean);
       }
 
       const prioM = yamlRaw.match(/priority:\s*(.+)$/m);
@@ -137,7 +145,7 @@ function parseMarkdownFile(filePath) {
       if (symM) symbol = symM[1].trim();
     }
 
-    const cleanBody = body.replace(/^#\s*.+$/m, '').trim();
+    const cleanBody = body.replace(/^#\s*.+$/m, "").trim();
 
     return {
       id,
@@ -152,7 +160,7 @@ function parseMarkdownFile(filePath) {
       file: fileName,
       filePath,
       raw: cleanBody,
-      body: cleanBody
+      body: cleanBody,
     };
   } catch (err) {
     void err;
@@ -169,7 +177,7 @@ function loadAllRecords() {
     if (!fs.existsSync(dir)) continue;
     const files = fs.readdirSync(dir);
     for (const f of files) {
-      if (f.endsWith('.md') && !f.startsWith('.')) {
+      if (f.endsWith(".md") && !f.startsWith(".")) {
         const p = path.join(dir, f);
         const parsed = parseMarkdownFile(p);
         if (parsed) records.push(parsed);
@@ -180,7 +188,7 @@ function loadAllRecords() {
   // Also check top-level SPAI_BASE_DIR for standalone .md files if any
   const topFiles = fs.readdirSync(SPAI_BASE_DIR);
   for (const f of topFiles) {
-    if (f.endsWith('.md') && !f.startsWith('.')) {
+    if (f.endsWith(".md") && !f.startsWith(".")) {
       const p = path.join(SPAI_BASE_DIR, f);
       const parsed = parseMarkdownFile(p);
       if (parsed) records.push(parsed);
@@ -188,8 +196,8 @@ function loadAllRecords() {
   }
 
   records.sort((a, b) => {
-    const numA = parseInt((a.id || '').replace(/\D/g, ''), 10) || 0;
-    const numB = parseInt((b.id || '').replace(/\D/g, ''), 10) || 0;
+    const numA = parseInt((a.id || "").replace(/\D/g, ""), 10) || 0;
+    const numB = parseInt((b.id || "").replace(/\D/g, ""), 10) || 0;
     return numA - numB;
   });
 
@@ -199,13 +207,13 @@ function loadAllRecords() {
 function getNextId(records) {
   let maxNum = 0;
   for (const r of records) {
-    const match = (r.id || '').match(/^SPAI-(\d+)$/i);
+    const match = (r.id || "").match(/^SPAI-(\d+)$/i);
     if (match) {
       const num = parseInt(match[1], 10);
       if (!Number.isNaN(num) && num > maxNum) maxNum = num;
     }
   }
-  return `SPAI-${(maxNum + 1).toString().padStart(3, '0')}`;
+  return `SPAI-${(maxNum + 1).toString().padStart(3, "0")}`;
 }
 
 function writeIndexJson(records) {
@@ -214,24 +222,25 @@ function writeIndexJson(records) {
     version: 1,
     lastUpdated: formatDateTime(),
     items: records || [],
-    records: records || []
+    records: records || [],
   };
-  fs.writeFileSync(INDEX_PATH, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  fs.writeFileSync(INDEX_PATH, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
 
 function syncItem(item) {
   ensureDirectories();
   const records = loadAllRecords();
-  
-  if (!item.id || !item.id.startsWith('SPAI-')) {
+
+  if (!item.id || !item.id.startsWith("SPAI-")) {
     item.id = getNextId(records);
   }
   if (!item.timestamp) {
     item.timestamp = formatDateTime();
   }
 
-  const datePrefix = (item.timestamp || formatDateTime()).split(' ')[0] || '2026-09-01';
-  const slug = slugify(item.title) || 'item';
+  const datePrefix =
+    (item.timestamp || formatDateTime()).split(" ")[0] || "2026-09-01";
+  const slug = slugify(item.title) || "item";
   const fileName = `${datePrefix}-${item.id}-${slug}.md`;
   const targetDir = getSubdirForType(item.type);
   const safeFileName = path.basename(fileName);
@@ -253,13 +262,17 @@ function syncItem(item) {
 
   // If type changed or file moved: delete old file
   if (existingPath && existingPath !== targetFilePath) {
-    try { fs.unlinkSync(existingPath); } catch (err) { void err; }
+    try {
+      fs.unlinkSync(existingPath);
+    } catch (err) {
+      void err;
+    }
   }
 
   // Write markdown with frontmatter
   item.file = fileName;
   const mdContent = formatMarkdown(item);
-  fs.writeFileSync(targetFilePath, mdContent, 'utf8');
+  fs.writeFileSync(targetFilePath, mdContent, "utf8");
 
   // Re-read all and save index
   const updatedRecords = loadAllRecords();
@@ -275,7 +288,11 @@ function deleteItemFile(id) {
     const files = fs.existsSync(d) ? fs.readdirSync(d) : [];
     for (const f of files) {
       if (f.includes(id)) {
-        try { fs.unlinkSync(path.join(d, f)); } catch (err) { void err; }
+        try {
+          fs.unlinkSync(path.join(d, f));
+        } catch (err) {
+          void err;
+        }
       }
     }
   }
@@ -294,10 +311,12 @@ function rebuildAll() {
 // CLI actions
 if (require.main === module) {
   const action = process.argv[2];
-  if (action === 'rebuild') {
+  if (action === "rebuild") {
     const recs = rebuildAll();
-    console.log(`Rebuilt SPAI index: ${recs.length} items in ~/Documents/spai/`);
-  } else if (action === 'sync') {
+    console.log(
+      `Rebuilt SPAI index: ${recs.length} items in ~/Documents/spai/`,
+    );
+  } else if (action === "sync") {
     const inputJson = process.argv[3];
     if (inputJson) {
       try {
@@ -305,10 +324,10 @@ if (require.main === module) {
         const res = syncItem(item);
         console.log(JSON.stringify(res));
       } catch (e) {
-        console.error('Failed to parse input item:', e.message);
+        console.error("Failed to parse input item:", e.message);
       }
     }
-  } else if (action === 'delete') {
+  } else if (action === "delete") {
     const id = process.argv[3];
     if (id) deleteItemFile(id);
   }
@@ -321,5 +340,5 @@ module.exports = {
   loadAllRecords,
   syncItem,
   deleteItemFile,
-  rebuildAll
+  rebuildAll,
 };
