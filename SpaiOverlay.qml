@@ -1117,7 +1117,7 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_1) {
+            } else if (event.key === Qt.Key_1 || event.text === "1" || event.key === Qt.Key_Plus) {
               if (root.viewMode === "kanban") {
                 var t1 = root.getSelectedTask()
                 if (t1) root.updateStatusAndFollow(t1.id, "todo")
@@ -1133,7 +1133,7 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_2) {
+            } else if (event.key === Qt.Key_2 || event.text === "2" || event.key === Qt.Key_Eacute) {
               if (root.viewMode === "kanban") {
                 var t2 = root.getSelectedTask()
                 if (t2) root.updateStatusAndFollow(t2.id, "working")
@@ -1149,7 +1149,7 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_3) {
+            } else if (event.key === Qt.Key_3 || event.text === "3" || event.key === Qt.Key_Scaron) {
               if (root.viewMode === "kanban") {
                 var t3 = root.getSelectedTask()
                 if (t3) root.updateStatusAndFollow(t3.id, "waiting")
@@ -1165,7 +1165,7 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_4) {
+            } else if (event.key === Qt.Key_4 || event.text === "4" || event.key === Qt.Key_Ccaron) {
               if (root.viewMode === "kanban") {
                 var t4 = root.getSelectedTask()
                 if (t4) root.updateStatusAndFollow(t4.id, "done")
@@ -1181,7 +1181,7 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_5) {
+            } else if (event.key === Qt.Key_5 || event.text === "5" || event.key === Qt.Key_Rcaron) {
               if (root.viewMode === "kanban") {
                 var t5 = root.getSelectedTask()
                 if (t5) root.updateStatusAndFollow(t5.id, "cancelled")
@@ -1197,10 +1197,10 @@ Item {
                 }
               }
               event.accepted = true
-            } else if (event.key === Qt.Key_6) {
+            } else if (event.key === Qt.Key_6 || event.text === "6" || event.key === Qt.Key_Zcaron) {
               root.viewMode = "notes"
               event.accepted = true
-            } else if (event.key === Qt.Key_7) {
+            } else if (event.key === Qt.Key_7 || event.text === "7" || event.key === Qt.Key_Yacute) {
               root.viewMode = "ideas"
               event.accepted = true
             } else if (event.key === Qt.Key_Tab) {
