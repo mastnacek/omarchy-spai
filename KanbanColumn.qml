@@ -6,6 +6,7 @@ Rectangle {
   id: root
 
   property string title: ""
+  property string columnGlyph: "○"
   property string columnStatus: "todo"
   property string columnType: "Todo"
   property color badgeColor: Color.accent
@@ -25,28 +26,40 @@ Rectangle {
     anchors.margins: Style.space(10)
     spacing: Style.space(10)
 
-    // Column Header
+    // Column Header with explicit [1..5] shortcut keycap
     Item {
       width: parent.width
       height: Style.space(28)
 
-      // Left Header: Dot + Uppercase Title + Count Badge
+      // Left Header: Shortcut keycap + Glyph + Title + Count Badge
       Row {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Style.space(8)
+        spacing: Style.space(6)
 
-        // Accent indicator circle
+        // Shortcut Keycap Badge [1..5]
         Rectangle {
-          width: Style.space(9)
-          height: Style.space(9)
-          radius: Style.space(4.5)
-          color: root.badgeColor
+          height: Style.space(20)
+          width: Style.space(20)
+          radius: Style.space(4)
+          color: Util.alpha(root.badgeColor, root.isActive ? 0.3 : 0.12)
+          border.color: Util.alpha(root.badgeColor, root.isActive ? 0.7 : 0.35)
+          border.width: 1
           anchors.verticalCenter: parent.verticalCenter
+
+          Text {
+            anchors.centerIn: parent
+            text: (root.columnIndex + 1).toString()
+            color: root.badgeColor
+            font.family: Style.font.menuFamily
+            font.pixelSize: Style.font.caption
+            font.bold: true
+          }
         }
 
+        // Column Glyph + Title
         Text {
-          text: root.title.toUpperCase()
+          text: root.columnGlyph + " " + root.title.toUpperCase()
           color: root.isActive ? root.badgeColor : "#f8fafc"
           font.family: Style.font.menuFamily
           font.pixelSize: Style.font.subtitle

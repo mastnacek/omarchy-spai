@@ -1280,7 +1280,7 @@ Item {
               Text {
                 id: tabKanbanText
                 anchors.centerIn: parent
-                text: "Kanban (" + root.stats.pendingTotal + ")"
+                text: "[1-5] ○ Kanban (" + root.stats.pendingTotal + ")"
                 color: root.viewMode === "kanban" ? (root.focusArea === "tabs" ? "#f94dff" : "#ffffff") : "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
@@ -1308,7 +1308,7 @@ Item {
               Text {
                 id: tabNotesText
                 anchors.centerIn: parent
-                text: "Notes (" + root.stats.notes + ")"
+                text: "[6] - Notes (" + root.stats.notes + ")"
                 color: root.viewMode === "notes" ? (root.focusArea === "tabs" ? "#04d1f9" : "#ffffff") : "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
@@ -1336,7 +1336,7 @@ Item {
               Text {
                 id: tabIdeasText
                 anchors.centerIn: parent
-                text: "Ideas (" + root.stats.ideas + ")"
+                text: "[7] ? Ideas (" + root.stats.ideas + ")"
                 color: root.viewMode === "ideas" ? (root.focusArea === "tabs" ? "#ec4899" : "#ffffff") : "#94a3b8"
                 font.family: root.fontFamily
                 font.pixelSize: Style.font.subtitle
@@ -1514,6 +1514,7 @@ Item {
                 width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Todo"
+                columnGlyph: "○"
                 columnStatus: "todo"
                 columnType: "Todo"
                 badgeColor: "#f94dff"
@@ -1527,6 +1528,7 @@ Item {
                 width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "In Progress"
+                columnGlyph: "◐"
                 columnStatus: "working"
                 columnType: "Todo"
                 badgeColor: "#f1fc79"
@@ -1540,6 +1542,7 @@ Item {
                 width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Waiting"
+                columnGlyph: "⏳"
                 columnStatus: "waiting"
                 columnType: "Todo"
                 badgeColor: "#987afb"
@@ -1553,6 +1556,7 @@ Item {
                 width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Done"
+                columnGlyph: "✓"
                 columnStatus: "done"
                 columnType: "Todo"
                 badgeColor: "#37f499"
@@ -1566,6 +1570,7 @@ Item {
                 width: (parent.width - Style.space(48)) / 5
                 height: parent.height
                 title: "Cancelled"
+                columnGlyph: "✗"
                 columnStatus: "cancelled"
                 columnType: "Todo"
                 badgeColor: "#5f6b8a"
@@ -1731,12 +1736,12 @@ Item {
                 // Keyboard Shortcuts Bar
                 Row {
                   width: parent.width
-                  spacing: Style.space(8)
+                  spacing: Style.space(6)
 
                   // Space: Cycle status loop
                   Rectangle {
                     height: Style.space(22)
-                    width: s1Text.implicitWidth + Style.space(12)
+                    width: s1Text.implicitWidth + Style.space(10)
                     radius: Style.space(4)
                     color: Util.alpha(Color.accent, 0.15)
                     border.color: Util.alpha(Color.accent, 0.3)
@@ -1745,7 +1750,7 @@ Item {
                     Text {
                       id: s1Text
                       anchors.centerIn: parent
-                      text: "Space Next Stage"
+                      text: "Space Next"
                       color: Color.accent
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -1753,51 +1758,155 @@ Item {
                     }
                   }
 
-                  // Arrow keys
+                  // 1 Todo
                   Rectangle {
                     height: Style.space(22)
-                    width: s2Text.implicitWidth + Style.space(12)
+                    width: k1Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#f94dff", 0.15)
+                    border.color: Util.alpha("#f94dff", 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: k1Text
+                      anchors.centerIn: parent
+                      text: "[1] Todo"
+                      color: "#f94dff"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // 2 Work
+                  Rectangle {
+                    height: Style.space(22)
+                    width: k2Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#f1fc79", 0.15)
+                    border.color: Util.alpha("#f1fc79", 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: k2Text
+                      anchors.centerIn: parent
+                      text: "[2] Work"
+                      color: "#f1fc79"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // 3 Wait
+                  Rectangle {
+                    height: Style.space(22)
+                    width: k3Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#987afb", 0.15)
+                    border.color: Util.alpha("#987afb", 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: k3Text
+                      anchors.centerIn: parent
+                      text: "[3] Wait"
+                      color: "#987afb"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // 4 Done
+                  Rectangle {
+                    height: Style.space(22)
+                    width: k4Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#37f499", 0.15)
+                    border.color: Util.alpha("#37f499", 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: k4Text
+                      anchors.centerIn: parent
+                      text: "[4] Done"
+                      color: "#37f499"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // 5 Cancel
+                  Rectangle {
+                    height: Style.space(22)
+                    width: k5Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#5f6b8a", 0.15)
+                    border.color: Util.alpha("#5f6b8a", 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: k5Text
+                      anchors.centerIn: parent
+                      text: "[5] Cancel"
+                      color: "#5f6b8a"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // 6 Notes
+                  Rectangle {
+                    height: Style.space(22)
+                    width: k6Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#04d1f9", 0.12)
+                    border.color: Util.alpha("#04d1f9", 0.25)
+                    border.width: 1
+
+                    Text {
+                      id: k6Text
+                      anchors.centerIn: parent
+                      text: "[6] Notes"
+                      color: "#04d1f9"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  // 7 Ideas
+                  Rectangle {
+                    height: Style.space(22)
+                    width: k7Text.implicitWidth + Style.space(10)
+                    radius: Style.space(4)
+                    color: Util.alpha("#ec4899", 0.12)
+                    border.color: Util.alpha("#ec4899", 0.25)
+                    border.width: 1
+
+                    Text {
+                      id: k7Text
+                      anchors.centerIn: parent
+                      text: "[7] Ideas"
+                      color: "#ec4899"
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  // Arrows
+                  Rectangle {
+                    height: Style.space(22)
+                    width: s2Text.implicitWidth + Style.space(10)
                     radius: Style.space(4)
                     color: Util.alpha(root.foreground, 0.08)
 
                     Text {
                       id: s2Text
                       anchors.centerIn: parent
-                      text: root.focusArea === "tabs" ? "←/→ Tabs   ↓ Enter Board" : "←/→ Column   ↑/↓ Select   (↑ Top = Tabs)"
-                      color: "#f1f5f9"
-                      font.family: root.fontFamily
-                      font.pixelSize: Style.font.caption
-                    }
-                  }
-
-                  // 1-5 Instant Column
-                  Rectangle {
-                    height: Style.space(22)
-                    width: s3Text.implicitWidth + Style.space(12)
-                    radius: Style.space(4)
-                    color: Util.alpha(root.foreground, 0.08)
-
-                    Text {
-                      id: s3Text
-                      anchors.centerIn: parent
-                      text: "1..5 Move Task"
-                      color: "#f1f5f9"
-                      font.family: root.fontFamily
-                      font.pixelSize: Style.font.caption
-                    }
-                  }
-
-                  // X Toggle Done
-                  Rectangle {
-                    height: Style.space(22)
-                    width: s4Text.implicitWidth + Style.space(12)
-                    radius: Style.space(4)
-                    color: Util.alpha(root.foreground, 0.08)
-
-                    Text {
-                      id: s4Text
-                      anchors.centerIn: parent
-                      text: "X Toggle Done"
+                      text: "←/→ Col   ↑/↓ Card   (↑ Top=Tabs)"
                       color: "#f1f5f9"
                       font.family: root.fontFamily
                       font.pixelSize: Style.font.caption
@@ -1807,7 +1916,7 @@ Item {
                   // Del Delete
                   Rectangle {
                     height: Style.space(22)
-                    width: s5Text.implicitWidth + Style.space(12)
+                    width: s5Text.implicitWidth + Style.space(10)
                     radius: Style.space(4)
                     color: Util.alpha("#f16c75", 0.12)
                     border.color: Util.alpha("#f16c75", 0.25)
