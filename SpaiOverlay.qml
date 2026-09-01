@@ -475,7 +475,24 @@ Item {
               property bool isDeleting: false
 
               Keys.onPressed: function(event) {
-                if (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete) {
+                if (event.key === Qt.Key_Backspace) {
+                  var t = captureInput.text
+                  // If text is only the auto-spaced prefix, delete the whole prefix in 1 backspace!
+                  if (t === ". " || t === "- " || t === "? " || t === "x " || t === "X " || t === "z " || t === "Z " || t === "/ " || t === "! ") {
+                    captureInput.text = ""
+                    captureInput.prevLength = 0
+                    captureInput.isDeleting = true
+                    event.accepted = true
+                    return
+                  } else if (t === "/. " || t === "/.") {
+                    captureInput.text = ""
+                    captureInput.prevLength = 0
+                    captureInput.isDeleting = true
+                    event.accepted = true
+                    return
+                  }
+                  captureInput.isDeleting = true
+                } else if (event.key === Qt.Key_Delete) {
                   captureInput.isDeleting = true
                 } else {
                   captureInput.isDeleting = false
