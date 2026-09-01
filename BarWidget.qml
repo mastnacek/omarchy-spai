@@ -64,10 +64,9 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     text: "󰄲 " + (root.stats.pendingTotal > 0 ? root.stats.pendingTotal : "0")
-    tooltipText: "SPAI Tasks (" + root.stats.pendingTotal + " active)\n" +
-                 "○ Todo: " + root.stats.todo + "  ·  ◐ Work: " + root.stats.working + "  ·  ⏳ Wait: " + root.stats.waiting + "\n" +
-                 "✓ Done: " + root.stats.done + "  ·  󰎞 Notes: " + root.stats.notes + "  ·  󰌵 Ideas: " + root.stats.ideas + "\n" +
-                 "• Left-click: Toggle Dropdown Panel\n• Right-click: Quick Capture"
+    tooltipText: "○ " + root.stats.todo + " Todo  ·  ◐ " + root.stats.working + " Work  ·  ⏳ " + root.stats.waiting + " Wait  ·  ✓ " + root.stats.done + " Done  ·  ✗ " + root.stats.cancelled + " Cancel\n" +
+                 "󰎞 " + root.stats.notes + " Notes  ·  󰌵 " + root.stats.ideas + " Ideas\n" +
+                 "• Left-click: Mini Board  ·  • Right-click: Quick Capture"
     onPressed: function(buttonCode) {
       if (buttonCode === Qt.LeftButton) {
         root.toggle()
