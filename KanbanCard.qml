@@ -10,6 +10,7 @@ Rectangle {
   property bool isSelected: false
   property int cardIndex: 0
   property int columnIndex: 0
+  property color statusColor: Color.accent
 
   readonly property bool isDone: cardData && cardData.status === "done"
   readonly property bool isUrgent: cardData && cardData.priority === "high"
@@ -17,11 +18,11 @@ Rectangle {
   height: cardContent.implicitHeight + Style.space(18)
   radius: Style.cornerRadius
   color: root.isSelected
-    ? Util.alpha(Color.accent, 0.16)
+    ? Util.alpha(root.statusColor, 0.18)
     : (cardHover.containsMouse ? Util.alpha(Color.menu.background, 1.0) : Util.alpha(Color.menu.background, 0.85))
   border.color: root.isSelected
-    ? Color.accent
-    : (isUrgent ? Util.alpha(Color.urgent, 0.7) : (cardHover.containsMouse ? Color.accent : Util.alpha(Color.menu.border, 0.25)))
+    ? root.statusColor
+    : (isUrgent ? Util.alpha(Color.urgent, 0.8) : (cardHover.containsMouse ? root.statusColor : Util.alpha(root.statusColor, 0.25)))
   border.width: root.isSelected || isUrgent || cardHover.containsMouse ? Style.space(1.5) : Style.normalBorderWidth
 
   MouseArea {
@@ -68,7 +69,7 @@ Rectangle {
 
       Text {
         text: root.cardData ? root.cardData.title : ""
-        color: root.isDone ? Color.muted : (root.isSelected ? Color.accent : Color.menu.text)
+        color: root.isDone ? Color.muted : (root.isSelected ? root.statusColor : Color.menu.text)
         font.family: Style.font.menuFamily
         font.pixelSize: Style.font.body
         font.strikeout: root.isDone
@@ -197,12 +198,12 @@ Rectangle {
         height: Style.space(22)
         width: Style.space(22)
         radius: Style.space(4)
-        color: root.isDone ? Util.alpha("#10b981", 0.3) : Util.alpha(Color.menu.text, 0.1)
+        color: root.isDone ? Util.alpha("#37f499", 0.3) : Util.alpha(Color.menu.text, 0.1)
 
         Text {
           anchors.centerIn: parent
           text: "✓"
-          color: root.isDone ? "#10b981" : Color.menu.text
+          color: root.isDone ? "#37f499" : Color.menu.text
           font.pixelSize: Style.font.caption
           font.bold: true
         }

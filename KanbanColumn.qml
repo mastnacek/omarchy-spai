@@ -16,8 +16,8 @@ Rectangle {
   readonly property var cardList: rootView ? rootView.getFilteredList(root.columnType, root.columnStatus) : []
 
   radius: Style.cornerRadius
-  color: Util.alpha(Color.menu.background, 0.5)
-  border.color: root.isActive ? Color.accent : Util.alpha(Color.menu.border, 0.25)
+  color: Util.alpha(Color.menu.background, 0.6)
+  border.color: root.isActive ? root.badgeColor : Util.alpha(root.badgeColor, 0.3)
   border.width: root.isActive ? Style.space(2) : Style.normalBorderWidth
 
   Column {
@@ -47,7 +47,7 @@ Rectangle {
 
         Text {
           text: root.title
-          color: root.isActive ? Color.accent : Color.menu.text
+          color: root.isActive ? root.badgeColor : Color.menu.text
           font.family: Style.font.menuFamily
           font.pixelSize: Style.font.subtitle
           font.bold: true
@@ -60,7 +60,7 @@ Rectangle {
           width: countText.implicitWidth + Style.space(12)
           radius: Style.space(10)
           color: Util.alpha(root.badgeColor, 0.18)
-          border.color: Util.alpha(root.badgeColor, 0.3)
+          border.color: Util.alpha(root.badgeColor, 0.4)
           border.width: 1
           anchors.verticalCenter: parent.verticalCenter
 
@@ -83,12 +83,14 @@ Rectangle {
         height: Style.space(24)
         width: Style.space(24)
         radius: Style.space(4)
-        color: Util.alpha(Color.menu.text, 0.08)
+        color: Util.alpha(root.badgeColor, 0.15)
+        border.color: Util.alpha(root.badgeColor, 0.3)
+        border.width: 1
 
         Text {
           anchors.centerIn: parent
           text: "+"
-          color: Color.menu.text
+          color: root.badgeColor
           font.pixelSize: Style.font.subtitle
           font.bold: true
         }
@@ -103,6 +105,7 @@ Rectangle {
               if (root.columnStatus === "working") prefix = "/ "
               else if (root.columnStatus === "waiting") prefix = "/. "
               else if (root.columnStatus === "done") prefix = "x "
+              else if (root.columnStatus === "cancelled") prefix = "z "
               Qt.callLater(function() {
                 root.rootView.captureInputText = prefix
               })
@@ -116,7 +119,7 @@ Rectangle {
     Rectangle {
       width: parent.width
       height: 1
-      color: Util.alpha(Color.menu.border, 0.15)
+      color: Util.alpha(root.badgeColor, 0.25)
     }
 
     // Card List
@@ -135,6 +138,7 @@ Rectangle {
         rootView: root.rootView
         columnIndex: root.columnIndex
         cardIndex: index
+        statusColor: root.badgeColor
         isSelected: root.isActive && index === root.rootView.selectedCardIndex
       }
 

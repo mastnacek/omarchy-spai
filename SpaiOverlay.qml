@@ -1369,7 +1369,7 @@ Item {
                 title: "Todo"
                 columnStatus: "todo"
                 columnType: "Todo"
-                badgeColor: "#38bdf8"
+                badgeColor: "#f94dff"
                 columnIndex: 0
                 isActive: root.activeColumnIndex === 0
                 rootView: root
@@ -1382,7 +1382,7 @@ Item {
                 title: "In Progress"
                 columnStatus: "working"
                 columnType: "Todo"
-                badgeColor: "#f59e0b"
+                badgeColor: "#f1fc79"
                 columnIndex: 1
                 isActive: root.activeColumnIndex === 1
                 rootView: root
@@ -1395,7 +1395,7 @@ Item {
                 title: "Waiting"
                 columnStatus: "waiting"
                 columnType: "Todo"
-                badgeColor: "#a855f7"
+                badgeColor: "#987afb"
                 columnIndex: 2
                 isActive: root.activeColumnIndex === 2
                 rootView: root
@@ -1408,7 +1408,7 @@ Item {
                 title: "Done"
                 columnStatus: "done"
                 columnType: "Todo"
-                badgeColor: "#10b981"
+                badgeColor: "#37f499"
                 columnIndex: 3
                 isActive: root.activeColumnIndex === 3
                 rootView: root
@@ -1421,7 +1421,7 @@ Item {
                 title: "Cancelled"
                 columnStatus: "cancelled"
                 columnType: "Todo"
-                badgeColor: "#94a3b8"
+                badgeColor: "#5f6b8a"
                 columnIndex: 4
                 isActive: root.activeColumnIndex === 4
                 rootView: root
@@ -1457,20 +1457,20 @@ Item {
                     radius: Style.space(4)
                     color: {
                       var st = parent.parent.parent.activeTask ? parent.parent.parent.activeTask.status : ""
-                      if (st === "todo") return Util.alpha("#38bdf8", 0.2)
-                      if (st === "working") return Util.alpha("#f59e0b", 0.2)
-                      if (st === "waiting") return Util.alpha("#a855f7", 0.2)
-                      if (st === "done") return Util.alpha("#10b981", 0.2)
-                      if (st === "cancelled") return Util.alpha("#94a3b8", 0.2)
+                      if (st === "todo") return Util.alpha("#f94dff", 0.2)
+                      if (st === "working") return Util.alpha("#f1fc79", 0.2)
+                      if (st === "waiting") return Util.alpha("#987afb", 0.2)
+                      if (st === "done") return Util.alpha("#37f499", 0.2)
+                      if (st === "cancelled") return Util.alpha("#5f6b8a", 0.2)
                       return Util.alpha(Color.accent, 0.2)
                     }
                     border.color: {
                       var st = parent.parent.parent.activeTask ? parent.parent.parent.activeTask.status : ""
-                      if (st === "todo") return "#38bdf8"
-                      if (st === "working") return "#f59e0b"
-                      if (st === "waiting") return "#a855f7"
-                      if (st === "done") return "#10b981"
-                      if (st === "cancelled") return "#94a3b8"
+                      if (st === "todo") return "#f94dff"
+                      if (st === "working") return "#f1fc79"
+                      if (st === "waiting") return "#987afb"
+                      if (st === "done") return "#37f499"
+                      if (st === "cancelled") return "#5f6b8a"
                       return Color.accent
                     }
                     border.width: 1
@@ -1489,11 +1489,11 @@ Item {
                       }
                       color: {
                         var st = parent.parent.parent.parent.activeTask ? parent.parent.parent.parent.activeTask.status : ""
-                        if (st === "todo") return "#38bdf8"
-                        if (st === "working") return "#f59e0b"
-                        if (st === "waiting") return "#a855f7"
-                        if (st === "done") return "#10b981"
-                        if (st === "cancelled") return "#94a3b8"
+                        if (st === "todo") return "#f94dff"
+                        if (st === "working") return "#f1fc79"
+                        if (st === "waiting") return "#987afb"
+                        if (st === "done") return "#37f499"
+                        if (st === "cancelled") return "#5f6b8a"
                         return Color.accent
                       }
                       font.family: root.fontFamily
