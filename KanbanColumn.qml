@@ -10,13 +10,14 @@ Rectangle {
   property string columnType: "Todo"
   property color badgeColor: Color.accent
   property bool isActive: false
+  property int columnIndex: 0
   property var rootView: null
 
   readonly property var cardList: rootView ? rootView.getFilteredList(root.columnType, root.columnStatus) : []
 
   radius: Style.cornerRadius
   color: Util.alpha(Color.menu.background, 0.5)
-  border.color: root.isActive ? Color.accent : Util.alpha(Color.menu.border, 0.22)
+  border.color: root.isActive ? Color.accent : Util.alpha(Color.menu.border, 0.25)
   border.width: root.isActive ? Style.space(2) : Style.normalBorderWidth
 
   Column {
@@ -24,63 +25,65 @@ Rectangle {
     anchors.margins: Style.space(10)
     spacing: Style.space(10)
 
-    // Column Header
-    Row {
+    // Column Header (immune to overlap via anchors)
+    Item {
       width: parent.width
       height: Style.space(28)
-      spacing: Style.space(8)
 
-      // Accent color pill
-      Rectangle {
-        width: Style.space(10)
-        height: Style.space(10)
-        radius: Style.space(5)
-        color: root.badgeColor
+      // Left Header content: Dot + Title + Count badge
+      Row {
+        anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-      }
+        spacing: Style.space(8)
 
-      Text {
-        text: root.title
-        color: Color.menu.text
-        font.family: Style.font.menuFamily
-        font.pixelSize: Style.font.subtitle
-        font.bold: true
-        anchors.verticalCenter: parent.verticalCenter
-      }
-
-      // Count badge
-      Rectangle {
-        height: Style.space(20)
-        width: countText.implicitWidth + Style.space(12)
-        radius: Style.space(10)
-        color: Util.alpha(root.badgeColor, 0.18)
-        border.color: Util.alpha(root.badgeColor, 0.3)
-        border.width: 1
-        anchors.verticalCenter: parent.verticalCenter
+        // Accent color dot
+        Rectangle {
+          width: Style.space(10)
+          height: Style.space(10)
+          radius: Style.space(5)
+          color: root.badgeColor
+          anchors.verticalCenter: parent.verticalCenter
+        }
 
         Text {
-          id: countText
-          anchors.centerIn: parent
-          text: root.cardList.length.toString()
-          color: root.badgeColor
+          text: root.title
+          color: root.isActive ? Color.accent : Color.menu.text
           font.family: Style.font.menuFamily
-          font.pixelSize: Style.font.caption
+          font.pixelSize: Style.font.subtitle
           font.bold: true
+          anchors.verticalCenter: parent.verticalCenter
+        }
+
+        // Count badge
+        Rectangle {
+          height: Style.space(20)
+          width: countText.implicitWidth + Style.space(12)
+          radius: Style.space(10)
+          color: Util.alpha(root.badgeColor, 0.18)
+          border.color: Util.alpha(root.badgeColor, 0.3)
+          border.width: 1
+          anchors.verticalCenter: parent.verticalCenter
+
+          Text {
+            id: countText
+            anchors.centerIn: parent
+            text: root.cardList.length.toString()
+            color: root.badgeColor
+            font.family: Style.font.menuFamily
+            font.pixelSize: Style.font.caption
+            font.bold: true
+          }
         }
       }
 
-      Item {
-        width: Math.max(0, parent.width - countText.implicitWidth - Style.space(100))
-        height: 1
-      }
-
-      // + Quick Add Button for this column
+      // Right Header content: + Button
       Rectangle {
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
         height: Style.space(24)
         width: Style.space(24)
         radius: Style.space(4)
         color: Util.alpha(Color.menu.text, 0.08)
-        anchors.verticalCenter: parent.verticalCenter
 
         Text {
           anchors.centerIn: parent
@@ -118,6 +121,7 @@ Rectangle {
 
     // Card List
     ListView {
+      id: cardListView
       width: parent.width
       height: parent.height - Style.space(42)
       clip: true
@@ -129,6 +133,9 @@ Rectangle {
         width: ListView.view.width
         cardData: modelData
         rootView: root.rootView
+        columnIndex: root.columnIndex
+        cardIndex: index
+        isSelected: root.isActive && index === root.rootView.selectedCardIndex
       }
 
       // Empty State

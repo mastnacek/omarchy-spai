@@ -7,20 +7,34 @@ Rectangle {
 
   property var cardData: null
   property var rootView: null
+  property bool isSelected: false
+  property int cardIndex: 0
+  property int columnIndex: 0
 
   readonly property bool isDone: cardData && cardData.status === "done"
   readonly property bool isUrgent: cardData && cardData.priority === "high"
 
   height: cardContent.implicitHeight + Style.space(18)
   radius: Style.cornerRadius
-  color: cardHover.containsMouse ? Util.alpha(Color.menu.background, 1.0) : Util.alpha(Color.menu.background, 0.9)
-  border.color: isUrgent ? Util.alpha(Color.urgent, 0.7) : (cardHover.containsMouse ? Color.accent : Util.alpha(Color.menu.border, 0.25))
-  border.width: isUrgent || cardHover.containsMouse ? Style.space(1.5) : Style.normalBorderWidth
+  color: root.isSelected
+    ? Util.alpha(Color.accent, 0.16)
+    : (cardHover.containsMouse ? Util.alpha(Color.menu.background, 1.0) : Util.alpha(Color.menu.background, 0.85))
+  border.color: root.isSelected
+    ? Color.accent
+    : (isUrgent ? Util.alpha(Color.urgent, 0.7) : (cardHover.containsMouse ? Color.accent : Util.alpha(Color.menu.border, 0.25)))
+  border.width: root.isSelected || isUrgent || cardHover.containsMouse ? Style.space(1.5) : Style.normalBorderWidth
 
   MouseArea {
     id: cardHover
     anchors.fill: parent
     hoverEnabled: true
+    cursorShape: Qt.PointingHandCursor
+    onClicked: {
+      if (root.rootView) {
+        root.rootView.activeColumnIndex = root.columnIndex
+        root.rootView.selectedCardIndex = root.cardIndex
+      }
+    }
   }
 
   Column {
@@ -29,7 +43,7 @@ Rectangle {
     anchors.margins: Style.space(9)
     spacing: Style.space(7)
 
-    // Top: Title + Priority Mark
+    // Top: Status Glyph + Title + Priority Mark
     Row {
       width: parent.width
       spacing: Style.space(6)
@@ -54,11 +68,11 @@ Rectangle {
 
       Text {
         text: root.cardData ? root.cardData.title : ""
-        color: root.isDone ? Color.muted : Color.menu.text
+        color: root.isDone ? Color.muted : (root.isSelected ? Color.accent : Color.menu.text)
         font.family: Style.font.menuFamily
         font.pixelSize: Style.font.body
         font.strikeout: root.isDone
-        font.bold: !root.isDone
+        font.bold: !root.isDone || root.isSelected
         width: parent.width - (root.isUrgent ? Style.space(24) : 0)
         wrapMode: Text.Wrap
       }
@@ -121,12 +135,12 @@ Rectangle {
       }
     }
 
-    // Bottom Action Bar (Visible on Hover or Touch)
+    // Bottom Action Bar (Visible on Hover or when Selected)
     Row {
       width: parent.width
       height: Style.space(24)
       spacing: Style.space(6)
-      visible: cardHover.containsMouse
+      visible: cardHover.containsMouse || root.isSelected
 
       // Move Left
       Rectangle {
@@ -153,7 +167,7 @@ Rectangle {
         }
       }
 
-      // Move Right
+      // Move Right / Space
       Rectangle {
         height: Style.space(22)
         width: Style.space(22)

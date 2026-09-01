@@ -36,8 +36,8 @@ Item {
   property int contentMargin: Style.spacing.panelPadding
   property int contentSpacing: Style.spacing.md
 
-  property int modalWidth: Math.min(Style.space(1180), panel.width - Style.gapsOut * 2)
-  property int modalHeight: Math.min(Style.space(720), panel.height - Style.gapsOut * 2)
+  property int modalWidth: Math.min(Style.space(1200), panel.width - Style.gapsOut * 2)
+  property int modalHeight: Math.min(Style.space(740), panel.height - Style.gapsOut * 2)
   property int captureWidth: Math.min(Style.space(660), panel.width - Style.gapsOut * 2)
   property alias captureInputText: captureInput.text
 
@@ -88,11 +88,13 @@ Item {
   function loadData(rawText) {
     root.allItems = SpaiModel.parseItems(rawText)
     root.stats = SpaiModel.getStats(root.allItems)
+    root.clampSelection()
   }
 
   function saveData() {
     dataFile.setText(SpaiModel.formatItems(root.allItems))
     root.stats = SpaiModel.getStats(root.allItems)
+    root.clampSelection()
   }
 
   function refreshData() {
@@ -124,10 +126,33 @@ Item {
     return SpaiModel.filterItems(root.allItems, root.filterText, typeFilter, statusFilter)
   }
 
+  function getActiveColumnTasks() {
+    var statuses = ["todo", "working", "waiting", "done"]
+    var st = statuses[root.activeColumnIndex] || "todo"
+    return root.getFilteredList("Todo", st)
+  }
+
+  function getSelectedTask() {
+    var list = root.getActiveColumnTasks()
+    if (list.length === 0) return null
+    var idx = Math.max(0, Math.min(root.selectedCardIndex, list.length - 1))
+    return list[idx] || null
+  }
+
+  function clampSelection() {
+    var list = root.getActiveColumnTasks()
+    if (list.length === 0) {
+      root.selectedCardIndex = 0
+    } else if (root.selectedCardIndex >= list.length) {
+      root.selectedCardIndex = list.length - 1
+    } else if (root.selectedCardIndex < 0) {
+      root.selectedCardIndex = 0
+    }
+  }
+
   function insertTokenIntoCapture(token, isPrefix) {
     var cur = captureInput.text
     if (isPrefix) {
-      // Remove existing prefix if any
       var prefixes = SpaiModel.getSpaiPrefixes()
       for (var i = 0; i < prefixes.length; i++) {
         if (cur.indexOf(prefixes[i].prefix) === 0) {
@@ -681,21 +706,86 @@ Item {
               captureInput.forceActiveFocus()
             })
             event.accepted = true
+          } else if (event.key === Qt.Key_Left || event.key === Qt.Key_H) {
+            if (root.viewMode === "kanban") {
+              root.activeColumnIndex = (root.activeColumnIndex - 1 + 4) % 4
+              root.clampSelection()
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_Right || event.key === Qt.Key_L) {
+            if (root.viewMode === "kanban") {
+              root.activeColumnIndex = (root.activeColumnIndex + 1) % 4
+              root.clampSelection()
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_Up || event.key === Qt.Key_K) {
+            if (root.viewMode === "kanban") {
+              if (root.selectedCardIndex > 0) root.selectedCardIndex--
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_Down || event.key === Qt.Key_J) {
+            if (root.viewMode === "kanban") {
+              var tasks = root.getActiveColumnTasks()
+              if (root.selectedCardIndex < tasks.length - 1) root.selectedCardIndex++
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_Space) {
+            // Cycle status loop in Kanban mode!
+            if (root.viewMode === "kanban") {
+              var curTask = root.getSelectedTask()
+              if (curTask) {
+                if (event.modifiers & Qt.ShiftModifier) {
+                  root.cycleItemStatus(curTask.id, -1)
+                } else {
+                  root.cycleItemStatus(curTask.id, 1)
+                }
+              }
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_X || event.key === Qt.Key_D) {
+            if (root.viewMode === "kanban") {
+              var curTaskD = root.getSelectedTask()
+              if (curTaskD) {
+                var nextSt = curTaskD.status === "done" ? "todo" : "done"
+                root.updateStatus(curTaskD.id, nextSt)
+              }
+            }
+            event.accepted = true
+          } else if (event.key === Qt.Key_Delete || event.key === Qt.Key_Backspace) {
+            if (root.viewMode === "kanban") {
+              var curTaskDel = root.getSelectedTask()
+              if (curTaskDel) {
+                root.deleteItem(curTaskDel.id)
+              }
+            }
+            event.accepted = true
           } else if (event.key === Qt.Key_1) {
-            root.viewMode = "kanban"
-            root.activeColumnIndex = 0
+            if (root.viewMode === "kanban") {
+              var t1 = root.getSelectedTask()
+              if (t1) root.updateStatus(t1.id, "todo")
+              else root.activeColumnIndex = 0
+            }
             event.accepted = true
           } else if (event.key === Qt.Key_2) {
-            root.viewMode = "kanban"
-            root.activeColumnIndex = 1
+            if (root.viewMode === "kanban") {
+              var t2 = root.getSelectedTask()
+              if (t2) root.updateStatus(t2.id, "working")
+              else root.activeColumnIndex = 1
+            }
             event.accepted = true
           } else if (event.key === Qt.Key_3) {
-            root.viewMode = "kanban"
-            root.activeColumnIndex = 2
+            if (root.viewMode === "kanban") {
+              var t3 = root.getSelectedTask()
+              if (t3) root.updateStatus(t3.id, "waiting")
+              else root.activeColumnIndex = 2
+            }
             event.accepted = true
           } else if (event.key === Qt.Key_4) {
-            root.viewMode = "kanban"
-            root.activeColumnIndex = 3
+            if (root.viewMode === "kanban") {
+              var t4 = root.getSelectedTask()
+              if (t4) root.updateStatus(t4.id, "done")
+              else root.activeColumnIndex = 3
+            }
             event.accepted = true
           } else if (event.key === Qt.Key_5) {
             root.viewMode = "notes"
@@ -710,6 +800,7 @@ Item {
               } else {
                 root.activeColumnIndex = (root.activeColumnIndex + 1) % 4
               }
+              root.clampSelection()
             }
             event.accepted = true
           }
@@ -719,7 +810,7 @@ Item {
       Column {
         anchors.fill: parent
         anchors.margins: Style.space(16)
-        spacing: Style.space(14)
+        spacing: Style.space(12)
 
         // --- Header Bar ---
         Row {
@@ -980,62 +1071,293 @@ Item {
           }
         }
 
-        // --- Body: KANBAN BOARD ---
+        // --- Body: KANBAN BOARD & BOTTOM PREVIEW ---
         Item {
           visible: root.viewMode === "kanban"
           width: parent.width
-          height: parent.height - Style.space(52)
+          height: parent.height - Style.space(50)
 
-          Row {
+          Column {
             anchors.fill: parent
-            spacing: Style.space(12)
+            spacing: Style.space(10)
 
-            // Column 1: Todo
-            KanbanColumn {
-              width: (parent.width - Style.space(36)) / 4
-              height: parent.height
-              title: "Todo"
-              columnStatus: "todo"
-              columnType: "Todo"
-              badgeColor: "#38bdf8"
-              isActive: root.activeColumnIndex === 0
-              rootView: root
+            // Top: 4 Kanban Columns
+            Row {
+              width: parent.width
+              height: parent.height - Style.space(120)
+              spacing: Style.space(12)
+
+              // Column 1: Todo
+              KanbanColumn {
+                width: (parent.width - Style.space(36)) / 4
+                height: parent.height
+                title: "Todo"
+                columnStatus: "todo"
+                columnType: "Todo"
+                badgeColor: "#38bdf8"
+                columnIndex: 0
+                isActive: root.activeColumnIndex === 0
+                rootView: root
+              }
+
+              // Column 2: In Progress
+              KanbanColumn {
+                width: (parent.width - Style.space(36)) / 4
+                height: parent.height
+                title: "In Progress"
+                columnStatus: "working"
+                columnType: "Todo"
+                badgeColor: "#f59e0b"
+                columnIndex: 1
+                isActive: root.activeColumnIndex === 1
+                rootView: root
+              }
+
+              // Column 3: Waiting
+              KanbanColumn {
+                width: (parent.width - Style.space(36)) / 4
+                height: parent.height
+                title: "Waiting"
+                columnStatus: "waiting"
+                columnType: "Todo"
+                badgeColor: "#a855f7"
+                columnIndex: 2
+                isActive: root.activeColumnIndex === 2
+                rootView: root
+              }
+
+              // Column 4: Done
+              KanbanColumn {
+                width: (parent.width - Style.space(36)) / 4
+                height: parent.height
+                title: "Done"
+                columnStatus: "done"
+                columnType: "Todo"
+                badgeColor: "#10b981"
+                columnIndex: 3
+                isActive: root.activeColumnIndex === 3
+                rootView: root
+              }
             }
 
-            // Column 2: In Progress
-            KanbanColumn {
-              width: (parent.width - Style.space(36)) / 4
-              height: parent.height
-              title: "In Progress"
-              columnStatus: "working"
-              columnType: "Todo"
-              badgeColor: "#f59e0b"
-              isActive: root.activeColumnIndex === 1
-              rootView: root
-            }
+            // Bottom: Active Task Preview & Shortcut Bar
+            Rectangle {
+              width: parent.width
+              height: Style.space(110)
+              radius: root.cornerRadius
+              color: Util.alpha(Color.menu.background, 0.7)
+              border.color: Util.alpha(Color.menu.border, 0.3)
+              border.width: Style.normalBorderWidth
 
-            // Column 3: Waiting
-            KanbanColumn {
-              width: (parent.width - Style.space(36)) / 4
-              height: parent.height
-              title: "Waiting"
-              columnStatus: "waiting"
-              columnType: "Todo"
-              badgeColor: "#a855f7"
-              isActive: root.activeColumnIndex === 2
-              rootView: root
-            }
+              property var activeTask: root.getSelectedTask()
 
-            // Column 4: Done
-            KanbanColumn {
-              width: (parent.width - Style.space(36)) / 4
-              height: parent.height
-              title: "Done"
-              columnStatus: "done"
-              columnType: "Todo"
-              badgeColor: "#10b981"
-              isActive: root.activeColumnIndex === 3
-              rootView: root
+              Column {
+                anchors.fill: parent
+                anchors.margins: Style.space(10)
+                spacing: Style.space(6)
+
+                // Task details if selected
+                Row {
+                  width: parent.width
+                  spacing: Style.space(10)
+                  visible: Boolean(parent.parent.activeTask)
+
+                  // Status Badge
+                  Rectangle {
+                    height: Style.space(22)
+                    width: taskStatusText.implicitWidth + Style.space(14)
+                    radius: Style.space(4)
+                    color: {
+                      var st = parent.parent.parent.activeTask ? parent.parent.parent.activeTask.status : ""
+                      if (st === "todo") return Util.alpha("#38bdf8", 0.2)
+                      if (st === "working") return Util.alpha("#f59e0b", 0.2)
+                      if (st === "waiting") return Util.alpha("#a855f7", 0.2)
+                      if (st === "done") return Util.alpha("#10b981", 0.2)
+                      return Util.alpha(Color.accent, 0.2)
+                    }
+                    border.color: {
+                      var st = parent.parent.parent.activeTask ? parent.parent.parent.activeTask.status : ""
+                      if (st === "todo") return "#38bdf8"
+                      if (st === "working") return "#f59e0b"
+                      if (st === "waiting") return "#a855f7"
+                      if (st === "done") return "#10b981"
+                      return Color.accent
+                    }
+                    border.width: 1
+
+                    Text {
+                      id: taskStatusText
+                      anchors.centerIn: parent
+                      text: {
+                        var st = parent.parent.parent.parent.activeTask ? parent.parent.parent.parent.activeTask.status : ""
+                        if (st === "todo") return "○ TODO"
+                        if (st === "working") return "◐ WORKING"
+                        if (st === "waiting") return "⏳ WAITING"
+                        if (st === "done") return "✓ DONE"
+                        return st.toUpperCase()
+                      }
+                      color: {
+                        var st = parent.parent.parent.parent.activeTask ? parent.parent.parent.parent.activeTask.status : ""
+                        if (st === "todo") return "#38bdf8"
+                        if (st === "working") return "#f59e0b"
+                        if (st === "waiting") return "#a855f7"
+                        if (st === "done") return "#10b981"
+                        return Color.accent
+                      }
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // Priority
+                  Rectangle {
+                    visible: parent.parent.parent.activeTask && parent.parent.parent.activeTask.priority === "high"
+                    height: Style.space(22)
+                    width: Style.space(68)
+                    radius: Style.space(4)
+                    color: Util.alpha(Color.urgent, 0.2)
+                    border.color: Color.urgent
+                    border.width: 1
+
+                    Text {
+                      anchors.centerIn: parent
+                      text: "! Urgent"
+                      color: Color.urgent
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // Title preview
+                  Text {
+                    text: parent.parent.parent.activeTask ? parent.parent.parent.activeTask.title : ""
+                    color: root.foreground
+                    font.family: root.fontFamily
+                    font.pixelSize: Style.font.title
+                    font.bold: true
+                    elide: Text.ElideRight
+                    width: parent.width - Style.space(240)
+                  }
+                }
+
+                // Empty / Placeholder text if no task selected
+                Row {
+                  width: parent.width
+                  spacing: Style.space(8)
+                  visible: !parent.parent.activeTask
+
+                  Text {
+                    text: "󰄲 SPAI Kanban Navigator"
+                    color: Color.accent
+                    font.family: root.fontFamily
+                    font.pixelSize: Style.font.title
+                    font.bold: true
+                  }
+                }
+
+                // Divider line
+                Rectangle {
+                  width: parent.width
+                  height: 1
+                  color: Util.alpha(Color.menu.border, 0.18)
+                }
+
+                // Keyboard Shortcuts Bar
+                Row {
+                  width: parent.width
+                  spacing: Style.space(8)
+
+                  // Space: Cycle status loop
+                  Rectangle {
+                    height: Style.space(22)
+                    width: s1Text.implicitWidth + Style.space(12)
+                    radius: Style.space(4)
+                    color: Util.alpha(Color.accent, 0.15)
+                    border.color: Util.alpha(Color.accent, 0.3)
+                    border.width: 1
+
+                    Text {
+                      id: s1Text
+                      anchors.centerIn: parent
+                      text: "Space Cycle Status"
+                      color: Color.accent
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                      font.bold: true
+                    }
+                  }
+
+                  // Arrow keys
+                  Rectangle {
+                    height: Style.space(22)
+                    width: s2Text.implicitWidth + Style.space(12)
+                    radius: Style.space(4)
+                    color: Util.alpha(root.foreground, 0.08)
+
+                    Text {
+                      id: s2Text
+                      anchors.centerIn: parent
+                      text: "←/→ Column   ↑/↓ Select"
+                      color: root.foreground
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  // 1-4 Instant Column
+                  Rectangle {
+                    height: Style.space(22)
+                    width: s3Text.implicitWidth + Style.space(12)
+                    radius: Style.space(4)
+                    color: Util.alpha(root.foreground, 0.08)
+
+                    Text {
+                      id: s3Text
+                      anchors.centerIn: parent
+                      text: "1..4 Set Status"
+                      color: root.foreground
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  // X Toggle Done
+                  Rectangle {
+                    height: Style.space(22)
+                    width: s4Text.implicitWidth + Style.space(12)
+                    radius: Style.space(4)
+                    color: Util.alpha(root.foreground, 0.08)
+
+                    Text {
+                      id: s4Text
+                      anchors.centerIn: parent
+                      text: "X Toggle Done"
+                      color: root.foreground
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  // Del Delete
+                  Rectangle {
+                    height: Style.space(22)
+                    width: s5Text.implicitWidth + Style.space(12)
+                    radius: Style.space(4)
+                    color: Util.alpha(Color.urgent, 0.1)
+
+                    Text {
+                      id: s5Text
+                      anchors.centerIn: parent
+                      text: "Del Remove"
+                      color: Color.urgent
+                      font.family: root.fontFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -1044,7 +1366,7 @@ Item {
         Item {
           visible: root.viewMode === "notes"
           width: parent.width
-          height: parent.height - Style.space(52)
+          height: parent.height - Style.space(50)
 
           ListView {
             anchors.fill: parent
@@ -1152,7 +1474,7 @@ Item {
         Item {
           visible: root.viewMode === "ideas"
           width: parent.width
-          height: parent.height - Style.space(52)
+          height: parent.height - Style.space(50)
 
           ListView {
             anchors.fill: parent
