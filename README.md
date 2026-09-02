@@ -19,11 +19,33 @@ A fast, keyboard-first task manager, 5-column Kanban board, notes & ideas tracke
 
 ---
 
+## 📦 Quick Installation
+
+### Option 1: One-Line Installer (Recommended)
+
+This automatically installs the plugin into Omarchy and prompts to configure the Hyprland shortcuts for you:
+
+```bash
+curl -sL https://raw.githubusercontent.com/mastnacek/omarchy-spai/main/install.sh | bash
+```
+
+### Option 2: Omarchy CLI
+
+```bash
+# 1. Install & enable via Omarchy CLI
+omarchy plugin add https://github.com/mastnacek/omarchy-spai.git --enable
+
+# 2. Automatically configure global Hyprland shortcuts
+~/.config/omarchy/plugins/jara.spai/setup-bindings.sh
+```
+
+---
+
 ## ⌨️ Keyboard Shortcuts
 
 ### Global Hyprland Shortcuts
 
-Add these to `~/.config/hypr/bindings.lua`:
+The setup script automatically adds these to `~/.config/hypr/bindings.lua` (or you can add them manually):
 
 ```lua
 -- SPAI Quick Capture
@@ -38,6 +60,7 @@ o.bind("CTRL + ALT + K", "SPAI Kanban Board", "omarchy-shell shell toggle jara.s
 | Key | Action |
 | --- | --- |
 | `Ctrl + Alt + Space` | Open Quick Capture modal |
+| `Ctrl + Alt + K` | Toggle Kanban Board overlay |
 | `Space` | Rotate status to next stage / Convert note or idea to task |
 | `1` / `.` / `t` | Move task / convert to **Todo** |
 | `2` / `/` / `w` | Move task / convert to **Working** |
@@ -53,28 +76,6 @@ o.bind("CTRL + ALT + K", "SPAI Kanban Board", "omarchy-shell shell toggle jara.s
 | `/` | Focus search filter |
 | `Delete` / `Backspace` | Delete selected card |
 | `Esc` | Clear filter / Close overlay |
-
----
-
-## 📦 Installation
-
-### Direct Install via Omarchy CLI
-
-```bash
-omarchy plugin add https://github.com/mastnacek/omarchy-spai.git --enable
-```
-
-### Local Development / Manual Install
-
-```bash
-# Clone into Omarchy plugins directory
-mkdir -p ~/.config/omarchy/plugins/jara.spai
-cp -r * ~/.config/omarchy/plugins/jara.spai/
-
-# Rescan and enable
-omarchy-shell shell rescanPlugins
-omarchy plugin enable jara.spai
-```
 
 ---
 
